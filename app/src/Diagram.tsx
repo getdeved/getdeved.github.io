@@ -36,3 +36,42 @@ export function NodeBox({ n, className = '', children, ...rest }: { n: NodeDef; 
 
 export const kindOf = (n: NodeDef) => n.kind ?? n.icon
 
+export type Frame = { x: number; y: number; w: number; h: number; label: string }
+
+export function Diagram({ design, onNodeClick, frames = [] }: { design: Design; onNodeClick?: (n: NodeDef) => void; frames?: Frame[] }) {
+  const byId = new Map(design.nodes.map((n) => [n.id, n]))
+  return (
+    <svg viewBox="0 0 1000 600" className="diagram" role="img" aria-label="System architecture diagram">
+      <Defs />
+      {!design.nodes.length && <text x={500} y={300} textAnchor="middle" className="empty">Your architecture appears here</text>}
+      {frames.map((f) => (
+        <g key={f.label} className="frame">
+          <rect x={f.x} y={f.y} width={f.w} height={f.h} rx={14} />
+          <text x={f.x + 12} y={f.y + 18}>{f.label}</text>
+        </g>
+      ))}
+      {design.edges.map((e, i) => {
+        const a = byId.get(e.from)!, b = byId.get(e.to)!
+        const dx = b.x - a.x, dy = b.y - a.y
+        const s = clip(dx, dy), t = clip(-dx, -dy)
+        const x1 = a.x + s.x, y1 = a.y + s.y, x2 = b.x + t.x, y2 = b.y + t.y
+        return (
+          <g key={i} className="edge">
+            <line x1={x1} y1={y1} x2={x2} y2={y2} strokeDasharray={e.dashed ? '6 5' : undefined} markerEnd="url(#arrow)" />
+            {e.label && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} textAnchor="middle">{e.label}</text>}
+          </g>
+        )
+      })}
+      {design.nodes.map((n) => (
+        <NodeBox
+          key={n.id} n={n} className={`${design.added.includes(n.id) ? 'fresh' : ''} ${onNodeClick ? 'clickable' : ''}`}
+          {...(onNodeClick && {
+            role: 'button', tabIndex: 0, 'aria-label': `About ${n.label}`,
+            onClick: () => onNodeClick(n),
+            onKeyDown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onNodeClick(n)),
+          })}
+        />
+      ))}
+    </svg>
+  )
+}
