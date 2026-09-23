@@ -58,3 +58,34 @@ h1, h2, h3 { text-wrap: balance }
 .split h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.15; letter-spacing: -.025em; font-weight: 600; margin: 0 }
 .prompts { display: grid; gap: 24px }
 @media (min-width: 700px) { .prompts { grid-template-columns: 1fr 1fr } }
+.cap { font-family: var(--mono); font-size: .78rem; color: var(--muted); margin: 0 0 10px }
+pre { margin: 0; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-family: var(--mono); font-size: .86rem; line-height: 1.6; white-space: pre-wrap; min-height: 7.5em }
+.prompts > div:last-child pre { border-color: var(--accent) }
+.note { color: var(--muted); font-size: .92rem; margin: 10px 0 0; max-width: 40ch }
+
+.loop { margin: 0 }
+.loop > div { display: grid; gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--line) }
+.loop > div:first-child { padding-top: 0 }
+@media (min-width: 700px) { .loop > div { grid-template-columns: 220px 1fr; gap: 24px } }
+.loop dt { font-weight: 600 }
+.loop dd { margin: 0; color: var(--muted); max-width: 60ch }
+
+.tracks { column-gap: 40px }
+@media (min-width: 700px) { .tracks { columns: 2 } }
+.track { break-inside: avoid; margin-bottom: 28px }
+.track h3 { font-size: .8rem; font-family: var(--mono); font-weight: 500; color: var(--muted); margin: 0 0 10px }
+.track ul { list-style: none; padding: 0; margin: 0 }
+.track li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .95rem }
+.track li.soon { color: var(--muted) }
+.track a { text-underline-offset: 4px } .track a:hover { color: var(--accent) }
+.status { font-family: var(--mono); font-size: .72rem; color: var(--muted); align-self: center }
+.status.live { color: var(--accent) }
+
+.closing { padding: 96px 0 112px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px }
+.closing h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -.03em; font-weight: 600; margin: 0 }
+.foot { max-width: 1180px; margin: 0 auto; padding: 24px 20px 40px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line) }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+
+/* playground overview */
+.overview { padding-top: clamp(24px, 5vw, 56px); padding-bottom: 80px }
