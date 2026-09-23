@@ -28,3 +28,33 @@ h1, h2, h3 { text-wrap: balance }
 .link { color: var(--muted); text-decoration: none; font-size: .92rem; text-underline-offset: 4px }
 .link:hover { color: var(--text); text-decoration: underline }
 
+/* buttons */
+.btn { font: inherit; font-weight: 500; display: inline-flex; align-items: center; padding: 12px 20px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--text); text-decoration: none; cursor: pointer; transition: transform .2s var(--ease), border-color .2s, background .2s }
+.btn:hover { border-color: var(--muted) }
+.btn:active { transform: translateY(1px) }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
+.btn.primary:hover { filter: brightness(1.08) }
+.btn.small { padding: 7px 14px; font-size: .9rem }
+
+/* landing */
+.landing { max-width: 1180px; margin: 0 auto; padding: 0 20px }
+.hero { padding: clamp(40px, 8vw, 96px) 0 64px }
+.hero h1 { font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: 1.04; letter-spacing: -.035em; font-weight: 600; margin: 0 0 24px }
+.lead { color: var(--muted); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; max-width: 58ch; margin: 0 0 32px }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 56px }
+.window { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px -24px rgb(0 0 0 / .55) }
+.window figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; padding: 14px 18px; border-bottom: 1px solid var(--line); font-size: .92rem }
+.tag { font-family: var(--mono); font-size: .75rem; color: var(--muted); margin-right: 10px }
+.fix { color: var(--accent) }
+.window .diagram { padding: 8px 12px }
+.ticks { display: flex; gap: 6px; padding: 0 18px 16px }
+.ticks button { flex: 1; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; position: relative }
+.ticks button::after { content: ''; position: absolute; left: 0; right: 0; top: 10px; height: 3px; border-radius: 2px; background: var(--line); transition: background .3s }
+.ticks button.on::after { background: var(--accent) }
+.ticks button:hover::after { background: var(--muted) }
+
+.split { display: grid; gap: 28px; padding: 72px 0; border-top: 1px solid var(--line) }
+@media (min-width: 900px) { .split { grid-template-columns: 1fr 1.6fr; gap: 64px } }
+.split h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.15; letter-spacing: -.025em; font-weight: 600; margin: 0 }
+.prompts { display: grid; gap: 24px }
+@media (min-width: 700px) { .prompts { grid-template-columns: 1fr 1fr } }
