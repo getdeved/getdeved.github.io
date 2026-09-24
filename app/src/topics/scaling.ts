@@ -50,3 +50,43 @@ export const scaling: Topic = {
       llmPrompt:
         'Build a small HTTP API with GET /users/:id that returns JSON. It will run on one server behind the DNS name api.mysite.com.',
     },
+    {
+      id: 'split-db',
+      title: 'One box is doing everything',
+      situation:
+        'About 1,000 users. The web code and the database fight over the same CPU and memory, and one heavy report query slows every page.',
+      options: [
+        {
+          id: 'split', label: 'Move the database to its own server', verdict: 'best',
+          feedback:
+            'Right. The web tier and the data tier can now be scaled, tuned and failed independently: web servers need CPU, databases need RAM and fast disks.',
+          remove: ['box'],
+          add: {
+            nodes: [n('web', 'Web server', 'server', 560, 300), n('db', 'Database', 'db', 880, 300)],
+            edges: [{ from: 'users', to: 'web', label: 'HTTP' }, { from: 'web', to: 'db' }],
+          },
+          delta: { capacity: 10, complexity: 5 },
+        },
+        {
+          id: 'bigger', label: 'Buy one bigger server', verdict: 'ok',
+          feedback:
+            'It works for a while and it is the simplest option. But everything still fails together, and cost per unit of power climbs steeply. Keep it in the toolbox; it just does not fix the root problem.',
+        },
+        {
+          id: 'cache', label: 'Add a cache in front of the database', verdict: 'premature',
+          feedback: 'Caching helps repeated reads, but web and DB still share one machine and one failure. You would be adding a moving part before fixing the structure.',
+        },
+        {
+          id: 'nosql', label: 'Rewrite everything on NoSQL', verdict: 'wrong',
+          feedback:
+            'The database type is not the bottleneck here. Relational databases fit most apps and have 40+ years of tooling. Reach for NoSQL when you need super-low latency, unstructured data, just serialization, or massive data volume.',
+        },
+      ],
+      underTheHood: [
+        'Relational (SQL: MySQL, PostgreSQL): tables and rows, joins across tables.',
+        'Non-relational (NoSQL): key-value, graph, column and document stores. Joins are generally not supported.',
+        'Default to relational unless you have a concrete reason not to.',
+      ],
+      llmPrompt:
+        'My Postgres currently runs on the same host as my API. Move it to a separate host reachable only over the private network, with the connection string coming from an environment variable.',
+    },
