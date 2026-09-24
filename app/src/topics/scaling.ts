@@ -18,3 +18,35 @@ export const scaling: Topic = {
     'Logs, metrics and automation are not optional once you have more than a few servers.',
   ],
   steps: [
+    {
+      id: 'single-server',
+      title: 'What happens when someone opens your site?',
+      situation:
+        'A user types api.mysite.com into a browser. Your whole app (web code, database, cache) runs on one server. What happens first?',
+      options: [
+        {
+          id: 'dns', label: 'The browser asks DNS for the server’s IP address', verdict: 'best',
+          feedback:
+            'Right. Browsers route by IP address, not by name. DNS (usually a paid third-party service, not run by your server) translates the name into an IP. Only then is the HTTP request sent, and the server replies with HTML or JSON.',
+          add: {
+            nodes: [n('users', 'Users', 'users', 70, 300, 'web + mobile'), n('dns', 'DNS', 'dns', 190, 120), { ...n('box', 'Single server', 'server', 560, 300, 'web + DB + cache'), kind: 'box' }],
+            edges: [{ from: 'users', to: 'dns', label: '1 · look up IP' }, { from: 'users', to: 'box', label: '2 · HTTP request' }],
+          },
+          delta: { capacity: 0 },
+        },
+        {
+          id: 'http', label: 'The browser sends the HTTP request to the server', verdict: 'wrong',
+          feedback: 'Not yet. The browser only has a name like api.mysite.com, which is not an address. It needs an IP first.',
+        },
+        {
+          id: 'db', label: 'The server queries the database', verdict: 'wrong',
+          feedback: 'That happens later, and only after a request has reached the server.',
+        },
+      ],
+      underTheHood: [
+        'Two kinds of clients hit your server: web apps (server-side code for logic, HTML/JS for presentation) and mobile apps.',
+        'Both usually speak HTTP, and JSON is the common response format because it is simple and light. Example: GET /users/12 returns user 12 as JSON.',
+      ],
+      llmPrompt:
+        'Build a small HTTP API with GET /users/:id that returns JSON. It will run on one server behind the DNS name api.mysite.com.',
+    },
