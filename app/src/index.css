@@ -89,3 +89,34 @@ pre { margin: 0; padding: 16px; background: var(--panel); border: 1px solid var(
 
 /* playground overview */
 .overview { padding-top: clamp(24px, 5vw, 56px); padding-bottom: 80px }
+.overview h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.03em; font-weight: 600; margin: 0 0 12px }
+.overview .lead { margin-bottom: 36px }
+.featured { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 24px; margin-bottom: 56px; background: var(--panel); border: 1px solid var(--accent); border-radius: 14px; text-decoration: none; transition: transform .25s var(--ease) }
+.featured:hover { transform: translateY(-2px) }
+.featured h2 { font-size: 1.3rem; margin: 0 0 6px; letter-spacing: -.02em }
+.featured p { color: var(--muted); margin: 0; max-width: 62ch }
+.overview .all { font-family: var(--mono); font-size: .8rem; font-weight: 500; color: var(--muted); margin: 0 0 20px }
+.frame rect { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 5 }
+.frame text { font-size: 11px; fill: var(--muted); font-family: var(--mono) }
+.featured-list { display: grid; gap: 14px; margin-bottom: 56px }
+.featured-list .featured { margin: 0 }
+.modes-line { font-family: var(--mono); font-size: .78rem; color: var(--accent) !important; margin-top: 10px !important }
+
+/* glossary page */
+.glossary { padding-top: clamp(24px, 5vw, 56px); padding-bottom: 80px; max-width: 860px }
+.glossary h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.03em; font-weight: 600; margin: 0 0 12px }
+.gl-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 24px 0 8px }
+.gl-tools input { flex: 1 1 280px; font: inherit; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text) }
+.gl-tools .chips { margin: 0 }
+.gl-tools .chips button { font: inherit; font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); cursor: pointer }
+.gl-tools .chips button.on { border-color: var(--accent); color: var(--accent) }
+.gl-count { font-family: var(--mono); font-size: .78rem; color: var(--muted) }
+.gl-list { margin: 16px 0 0 }
+.gl-list > div { display: grid; gap: 4px 24px; padding: 16px 0; border-top: 1px solid var(--line) }
+@media (min-width: 700px) { .gl-list > div { grid-template-columns: 230px 1fr } }
+.gl-list dt { font-weight: 600 }
+.gl-list dt small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; margin-top: 2px }
+.gl-list dd { margin: 0 }
+.gl-list dd p { margin: 0; line-height: 1.55 }
+.gl-topics { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px !important }
+.gl-topics a { font-size: .8rem; color: var(--accent); text-underline-offset: 3px }
