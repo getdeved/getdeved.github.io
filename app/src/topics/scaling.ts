@@ -196,3 +196,42 @@ export const scaling: Topic = {
       llmPrompt:
         'Configure Postgres streaming replication with one primary and two read replicas, and route SELECTs to replicas and writes to the primary. How should my code handle replication lag right after a write?',
     },
+    {
+      id: 'cache',
+      title: 'The same data is fetched thousands of times',
+      situation:
+        'Each page load runs many queries, mostly for data that rarely changes (profiles, product info). Database CPU is high even with replicas.',
+      options: [
+        {
+          id: 'cache', label: 'Add a cache tier in front of the database', verdict: 'best',
+          feedback:
+            'Right. The app checks the cache first; on a miss it reads the database, stores the result, and returns it (a read-through cache). Memory is much faster than disk, the database sees less load, and the cache scales on its own.',
+          add: {
+            nodes: [n('cache', 'Cache', 'cache', 700, 210, 'in memory')],
+            edges: [{ from: 'web1', to: 'cache' }, { from: 'web2', to: 'cache' }],
+          },
+          delta: { speed: 20, capacity: 10, complexity: 5 },
+        },
+        {
+          id: 'web', label: 'Add more web servers', verdict: 'wrong',
+          feedback: 'The bottleneck is the database. More web servers just send it more queries.',
+        },
+        {
+          id: 'replicas', label: 'Add more read replicas', verdict: 'ok',
+          feedback: 'It helps, but every replica is a full copy on disk. A cache serves the hot data from memory far more cheaply.',
+        },
+        {
+          id: 'forever', label: 'Cache everything forever', verdict: 'wrong',
+          feedback: 'Data goes stale and memory fills up. Every cache needs an expiration policy and an eviction policy.',
+        },
+      ],
+      underTheHood: [
+        'Use a cache for data that is read often but changed rarely. It is volatile memory, so never keep the only copy of important data there.',
+        'Expiration (TTL): not too short (constant reloads), not too long (stale data).',
+        'Eviction when full: LRU is the usual default; LFU and FIFO exist.',
+        'Consistency: updating the DB and the cache is not one transaction, so they can drift.',
+        'A single cache server is a single point of failure; run several.',
+      ],
+      llmPrompt:
+        'Add read-through caching with Redis to getUser(id): 5 minute TTL, invalidate on update, and fall back to the database if Redis is down.',
+    },
