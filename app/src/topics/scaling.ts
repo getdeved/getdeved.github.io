@@ -159,3 +159,40 @@ export const scaling: Topic = {
       llmPrompt:
         'Write an nginx config that load-balances across two upstream servers, with health checks and automatic removal of failing nodes.',
     },
+    {
+      id: 'replication',
+      title: 'The database is a single point of failure',
+      situation:
+        'The web tier survives failures now. But if the database dies, everything stops and data can be lost. Also, about 90% of queries are reads.',
+      options: [
+        {
+          id: 'replica', label: 'One primary for writes, plus replicas for reads', verdict: 'best',
+          feedback:
+            'Right. Writes go to the primary; reads are spread over replicas, so more queries run in parallel and data survives the loss of a machine. If a replica dies, reads go to the others. If the primary dies, a replica is promoted.',
+          add: {
+            nodes: [n('replica', 'Replica', 'replica', 880, 420, 'read-only')],
+            edges: [{ from: 'db', to: 'replica', label: 'copies writes', dashed: true }, { from: 'web2', to: 'replica', label: 'reads' }],
+          },
+          delta: { capacity: 5, availability: 15, speed: 5, complexity: 10 },
+        },
+        {
+          id: 'backup', label: 'Take nightly backups', verdict: 'ok',
+          feedback: 'Backups protect against data loss, not downtime. Restoring takes hours, and all reads still hit one machine. Do this anyway, just not as the answer here.',
+        },
+        {
+          id: 'ram', label: 'Give the database more RAM', verdict: 'wrong',
+          feedback: 'Faster, maybe, but it is still one machine. It does not remove the single point of failure.',
+        },
+        {
+          id: 'shard', label: 'Shard the database now', verdict: 'premature',
+          feedback: 'Sharding addresses data size and write volume, not availability, and adds a lot of complexity. Save it for when one primary truly cannot cope.',
+        },
+      ],
+      underTheHood: [
+        'Replicas usually outnumber primaries, because most apps read far more than they write.',
+        'Promoting a replica is trickier than it sounds: the replica may be behind, so missing data must be recovered with scripts.',
+        'Multi-primary and circular replication exist but are significantly more complex.',
+      ],
+      llmPrompt:
+        'Configure Postgres streaming replication with one primary and two read replicas, and route SELECTs to replicas and writes to the primary. How should my code handle replication lag right after a write?',
+    },
