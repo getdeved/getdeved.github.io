@@ -235,3 +235,41 @@ export const scaling: Topic = {
       llmPrompt:
         'Add read-through caching with Redis to getUser(id): 5 minute TTL, invalidate on update, and fall back to the database if Redis is down.',
     },
+    {
+      id: 'cdn',
+      title: 'Users far away load slowly',
+      situation:
+        'Users in Asia wait seconds for images, JS and CSS served from your US servers. Those files are the same for everyone.',
+      options: [
+        {
+          id: 'cdn', label: 'Serve static files from a CDN', verdict: 'best',
+          feedback:
+            'Right. A CDN keeps copies of static files on servers around the world. The first request pulls the file from your origin; later users nearby get it from the CDN until its TTL expires. Your servers also stop spending effort on static files.',
+          add: {
+            nodes: [n('cdn', 'CDN', 'cdn', 190, 480, 'static files')],
+            edges: [{ from: 'users', to: 'cdn', label: 'static' }, { from: 'cdn', to: 'lb', label: 'on a miss', dashed: true }],
+          },
+          delta: { speed: 15, capacity: 5, complexity: 5 },
+        },
+        {
+          id: 'bw', label: 'Buy more bandwidth for the web servers', verdict: 'wrong',
+          feedback: 'The delay comes from distance, not from pipe size.',
+        },
+        {
+          id: 'redis', label: 'Put the static files in the cache tier', verdict: 'ok',
+          feedback: 'That helps your servers, but the cache sits next to the origin, so the data still travels across the world to the user.',
+        },
+        {
+          id: 'dc', label: 'Open a second data center', verdict: 'premature',
+          feedback: 'A heavy hammer for what a CDN solves more cheaply. Multi-data-center is covered a few steps later.',
+        },
+      ],
+      underTheHood: [
+        'Cost: you pay per transfer, so rarely requested files are not worth putting on a CDN.',
+        'Expiry: not too long (stale files) and not too short (constant origin hits).',
+        'Fallback: if the CDN is down, clients should be able to fetch from the origin.',
+        'Invalidation: call the vendor’s purge API, or version the URL (image.png?v=2) so a new URL means a new file.',
+      ],
+      llmPrompt:
+        'Set up a CDN in front of /static with long cache headers and content-hashed filenames, so I never need to purge manually.',
+    },
