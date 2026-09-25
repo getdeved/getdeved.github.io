@@ -90,3 +90,31 @@ export const scaling: Topic = {
       llmPrompt:
         'My Postgres currently runs on the same host as my API. Move it to a separate host reachable only over the private network, with the connection string coming from an environment variable.',
     },
+    {
+      id: 'up-or-out',
+      title: 'Traffic keeps growing: scale up or out?',
+      situation:
+        'Both tiers are getting busy. You can make a machine bigger (vertical, “scale up”) or add more machines (horizontal, “scale out”). What is your plan for the web tier?',
+      options: [
+        {
+          id: 'out', label: 'Plan to run several web servers', verdict: 'best',
+          feedback:
+            'Right. Vertical scaling has a hard ceiling (you cannot add unlimited CPU and RAM) and no failover. Horizontal scaling is how large systems grow. It does need something to spread requests across the servers, which is the next step.',
+        },
+        {
+          id: 'up', label: 'Keep upgrading the one web server', verdict: 'ok',
+          feedback:
+            'Perfectly reasonable while traffic is low, since simplicity is its big advantage. But it has a hard limit, and if that one server goes down the whole site goes with it.',
+        },
+        {
+          id: 'wait', label: 'Do nothing until it breaks', verdict: 'wrong',
+          feedback: 'Peak traffic is the worst moment to learn your design cannot grow.',
+        },
+      ],
+      underTheHood: [
+        'Vertical: more CPU/RAM on the same machine. Easy, but capped and a single point of failure.',
+        'Horizontal: more machines in a pool. Needs a load balancer, and your app must not depend on one machine’s memory or disk.',
+      ],
+      llmPrompt:
+        'Review my API for anything that would break if I run three copies behind a load balancer: local files, in-memory state, cron jobs, singletons.',
+    },
