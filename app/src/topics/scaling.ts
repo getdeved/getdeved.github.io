@@ -118,3 +118,44 @@ export const scaling: Topic = {
       llmPrompt:
         'Review my API for anything that would break if I run three copies behind a load balancer: local files, in-memory state, cron jobs, singletons.',
     },
+    {
+      id: 'load-balancer',
+      title: 'A web server just died',
+      situation:
+        'The only web server crashed at 2am and the site stayed down until you woke up. Clients also connect to the server’s IP directly.',
+      options: [
+        {
+          id: 'lb', label: 'Put a load balancer in front of two or more web servers', verdict: 'best',
+          feedback:
+            'Right. Users hit the load balancer’s public IP; the web servers use private IPs and are unreachable from the internet (safer). If server 1 dies, traffic goes to server 2. If traffic grows, add servers to the pool and the balancer starts using them, with no client change.',
+          remove: ['web'],
+          add: {
+            nodes: [n('lb', 'Load balancer', 'lb', 330, 300), n('web1', 'Web 1', 'server', 560, 210), n('web2', 'Web 2', 'server', 560, 390)],
+            edges: [
+              { from: 'users', to: 'lb' }, { from: 'lb', to: 'web1' }, { from: 'lb', to: 'web2' },
+              { from: 'web1', to: 'db' }, { from: 'web2', to: 'db' },
+            ],
+          },
+          delta: { capacity: 15, availability: 20, complexity: 10 },
+        },
+        {
+          id: 'rr', label: 'List both servers’ IPs in DNS (round robin)', verdict: 'ok',
+          feedback: 'Spreads traffic roughly, but DNS answers are cached, so a dead server keeps receiving requests until records expire, and clients see your servers’ real addresses.',
+        },
+        {
+          id: 'restart', label: 'Write a script that restarts the server faster', verdict: 'wrong',
+          feedback: 'Faster recovery is nice, but one server is still a single point of failure, and users still see downtime.',
+        },
+        {
+          id: 'db2', label: 'Add a second database', verdict: 'premature',
+          feedback: 'The database is a real gap, but it did not cause this outage. Fix the web tier first; replication comes next.',
+        },
+      ],
+      underTheHood: [
+        'The balancer runs health checks and stops sending traffic to servers that fail them.',
+        'Common algorithms: round robin, least connections, hashing on client IP.',
+        'The balancer itself can become a single point of failure, so production setups run it in pairs.',
+      ],
+      llmPrompt:
+        'Write an nginx config that load-balances across two upstream servers, with health checks and automatic removal of failing nodes.',
+    },
