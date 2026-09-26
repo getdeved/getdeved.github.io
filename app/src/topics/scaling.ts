@@ -273,3 +273,39 @@ export const scaling: Topic = {
       llmPrompt:
         'Set up a CDN in front of /static with long cache headers and content-hashed filenames, so I never need to purge manually.',
     },
+    {
+      id: 'stateless',
+      title: 'Users get logged out when servers change',
+      situation:
+        'Session data lives in each web server’s memory. The load balancer sends a user to server 2 and they are logged out. You also want to add servers automatically during traffic spikes.',
+      options: [
+        {
+          id: 'stateless', label: 'Move session data to a shared store; make web servers stateless', verdict: 'best',
+          feedback:
+            'Right. Any server can now handle any request, because state lives in a shared store (a relational DB, a cache, or NoSQL). That makes it easy to add and remove servers automatically as traffic changes.',
+          add: {
+            nodes: [n('session', 'Session store', 'session', 700, 90), n('web3', 'Web N', 'server', 560, 110, 'auto-added')],
+            edges: [
+              { from: 'web1', to: 'session' }, { from: 'web2', to: 'session' }, { from: 'web3', to: 'session' },
+              { from: 'lb', to: 'web3' }, { from: 'web3', to: 'db' },
+            ],
+          },
+          delta: { capacity: 10, availability: 5, complexity: 5 },
+        },
+        {
+          id: 'sticky', label: 'Use sticky sessions on the load balancer', verdict: 'ok',
+          feedback: 'It works, but load becomes uneven, adding or removing servers is awkward, and if that server dies its users lose their sessions.',
+        },
+        {
+          id: 'sync', label: 'Copy sessions between all web servers', verdict: 'wrong',
+          feedback: 'Every server syncing with every other grows quadratically with the pool and wastes memory. It does not scale.',
+        },
+      ],
+      underTheHood: [
+        'Stateful server: remembers client data between requests, so a client must keep hitting the same server.',
+        'Stateless server: keeps nothing between requests; state is fetched from a shared store.',
+        'Autoscaling adds or removes servers based on load such as CPU.',
+      ],
+      llmPrompt:
+        'Refactor my Express app’s session handling from in-memory to Redis-backed sessions, so any instance can serve any request.',
+    },
