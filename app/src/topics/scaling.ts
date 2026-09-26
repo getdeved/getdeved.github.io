@@ -346,3 +346,36 @@ export const scaling: Topic = {
       llmPrompt:
         'Explain how to configure geo or latency-based routing with health checks that fail over between two regions, and which database replication mode fits.',
     },
+    {
+      id: 'queue',
+      title: 'Slow work blocks users',
+      situation:
+        'Users upload photos; resizing takes 30 seconds and the request hangs. Upload spikes overwhelm the web servers.',
+      options: [
+        {
+          id: 'queue', label: 'Put jobs on a message queue; process them with separate workers', verdict: 'best',
+          feedback:
+            'Right. The web server publishes a job and responds immediately. Workers pull jobs at their own pace. Producers and consumers scale independently, and if workers die the jobs simply wait in the queue.',
+          add: {
+            nodes: [n('queue', 'Message queue', 'queue', 700, 390), n('workers', 'Workers', 'worker', 700, 510, 'resize photos')],
+            edges: [{ from: 'web1', to: 'queue', label: 'publish' }, { from: 'web2', to: 'queue' }, { from: 'queue', to: 'workers', label: 'consume' }, { from: 'workers', to: 'db' }],
+          },
+          delta: { capacity: 10, availability: 5, complexity: 10 },
+        },
+        {
+          id: 'big', label: 'Use bigger web servers so the work finishes sooner', verdict: 'wrong',
+          feedback: 'Users still wait, and web servers sit busy with work that is not about serving requests.',
+        },
+        {
+          id: 'nightly', label: 'Process everything in a nightly batch', verdict: 'ok',
+          feedback: 'Fine for reports, but not for something a user is waiting to see.',
+        },
+      ],
+      underTheHood: [
+        'Producers (publishers) create messages; consumers (subscribers) perform the work.',
+        'Scale workers by queue length: many waiting jobs, add workers; few, remove some.',
+        'Decoupling means a slow or crashed consumer does not take the producer down.',
+      ],
+      llmPrompt:
+        'Add a job queue (BullMQ or SQS) for image resizing: the API enqueues and returns 202, the worker retries failures, and jobs are safe to run twice.',
+    },
