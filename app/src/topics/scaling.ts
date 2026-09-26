@@ -309,3 +309,40 @@ export const scaling: Topic = {
       llmPrompt:
         'Refactor my Express app’s session handling from in-memory to Redis-backed sessions, so any instance can serve any request.',
     },
+    {
+      id: 'multi-dc',
+      title: 'A whole data center goes down',
+      situation:
+        'Users in Europe see 200 ms latency on every API call, even with the CDN. And a power cut in your single data center would take everything offline.',
+      options: [
+        {
+          id: 'multi', label: 'Run a second data center and route users to the nearest one', verdict: 'best',
+          feedback:
+            'Right. GeoDNS sends each user to the closest data center. If one goes down, all traffic goes to the healthy one. The price: data must be synchronized across sites and deployments must be automated so every data center runs the same code.',
+          remove: ['dns'],
+          add: {
+            nodes: [n('geodns', 'GeoDNS', 'geodns', 190, 120), n('dc2', 'Data center B', 'dc', 880, 540, 'copy of the stack')],
+            edges: [
+              { from: 'users', to: 'geodns', label: 'nearest DC' }, { from: 'geodns', to: 'lb', dashed: true },
+              { from: 'geodns', to: 'dc2', dashed: true }, { from: 'db', to: 'dc2', label: 'replicate', dashed: true },
+            ],
+          },
+          delta: { availability: 10, speed: 5, complexity: 15 },
+        },
+        {
+          id: 'more', label: 'Add more servers in the same data center', verdict: 'wrong',
+          feedback: 'More capacity does not fix distance, and the whole building is still one failure domain.',
+        },
+        {
+          id: 'cold', label: 'Keep cold backups in another region', verdict: 'ok',
+          feedback: 'Good for disaster recovery, but users are still down until you rebuild, and nothing improves latency.',
+        },
+      ],
+      underTheHood: [
+        'Traffic redirection: GeoDNS (or latency/health-based routing) picks the data center.',
+        'Data synchronization: users in different regions may use different databases, so replicate data across data centers.',
+        'Testing and deployment: automated tools keep every data center consistent.',
+      ],
+      llmPrompt:
+        'Explain how to configure geo or latency-based routing with health checks that fail over between two regions, and which database replication mode fits.',
+    },
