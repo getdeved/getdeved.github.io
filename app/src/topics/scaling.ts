@@ -379,3 +379,36 @@ export const scaling: Topic = {
       llmPrompt:
         'Add a job queue (BullMQ or SQS) for image resizing: the API enqueues and returns 202, the worker retries failures, and jobs are safe to run twice.',
     },
+    {
+      id: 'observability',
+      title: 'Something is broken and you cannot tell what',
+      situation:
+        'Users report errors, but you cannot tell which server or which tier is at fault. Releases are manual and error-prone.',
+      options: [
+        {
+          id: 'obs', label: 'Add logging, metrics and automation (CI/CD)', verdict: 'best',
+          feedback:
+            'Right. Logs show what failed, metrics show how healthy each tier is, and automation (build, test, deploy) keeps many servers consistent and releases boring.',
+          add: {
+            nodes: [n('mon', 'Logs · metrics', 'monitor', 330, 520, 'alerts')],
+            edges: [{ from: 'lb', to: 'mon', label: 'all tiers report', dashed: true }],
+          },
+          delta: { availability: 5, complexity: 5 },
+        },
+        {
+          id: 'ssh', label: 'SSH into servers when users complain', verdict: 'wrong',
+          feedback: 'Manageable with two servers, hopeless with twenty, and you only learn about problems after users do.',
+        },
+        {
+          id: 'later', label: 'Wait until the system is bigger', verdict: 'premature',
+          feedback: 'It is cheapest to add now, and you need it before the system is big.',
+        },
+      ],
+      underTheHood: [
+        'Logs: aggregate error logs from all servers into one searchable place.',
+        'Metrics: host-level (CPU, memory, disk), tier-level (DB load, cache hit rate), business (daily active users, revenue).',
+        'Automation: continuous integration, automated builds, tests and deploys.',
+      ],
+      llmPrompt:
+        'Add structured JSON logging with a request ID, a /metrics endpoint for Prometheus, and a GitHub Actions pipeline that tests and deploys.',
+    },
