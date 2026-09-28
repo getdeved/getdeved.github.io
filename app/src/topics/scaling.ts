@@ -412,3 +412,50 @@ export const scaling: Topic = {
       llmPrompt:
         'Add structured JSON logging with a request ID, a /metrics endpoint for Prometheus, and a GitHub Actions pipeline that tests and deploys.',
     },
+    {
+      id: 'sharding',
+      title: 'One database can’t hold the data',
+      situation:
+        'Millions of users. The primary cannot keep up with writes and the data is outgrowing one disk. Replicas help reads, not writes.',
+      options: [
+        {
+          id: 'shard', label: 'Shard: split rows across several databases by a key like user_id', verdict: 'best',
+          feedback:
+            'Right. Each shard has the same schema but holds different rows, so data size and write load are divided. The app (or a router) uses the key to pick the shard. A well-chosen key spreads data evenly.',
+          remove: ['db', 'replica'],
+          add: {
+            nodes: [
+              { ...n('router', 'Shard router', 'lb', 745, 300, 'user_id → shard'), kind: 'router' },
+              { ...n('s1', 'Shard 1', 'db', 880, 150), kind: 'shard' }, { ...n('s2', 'Shard 2', 'db', 880, 290), kind: 'shard' }, { ...n('s3', 'Shard 3', 'db', 880, 430), kind: 'shard' },
+            ],
+            edges: [
+              { from: 'web1', to: 'router' }, { from: 'web2', to: 'router' }, { from: 'web3', to: 'router' }, { from: 'workers', to: 'router' },
+              { from: 'router', to: 's1' }, { from: 'router', to: 's2' }, { from: 'router', to: 's3' },
+              { from: 'router', to: 'dc2', dashed: true },
+            ],
+          },
+          delta: { capacity: 15, complexity: 15 },
+        },
+        {
+          id: 'biggest', label: 'Buy the biggest database server available', verdict: 'ok',
+          feedback: 'Reasonable as a stop-gap. But there is a hard ceiling, it is very expensive, and it is one machine again.',
+        },
+        {
+          id: 'replicas', label: 'Add more replicas', verdict: 'wrong',
+          feedback: 'Every replica holds a full copy, and all writes still go through one primary. It helps neither data size nor write volume.',
+        },
+        {
+          id: 'country', label: 'Shard by country', verdict: 'wrong',
+          feedback: 'Countries differ wildly in size, so one shard would be overloaded while others sit idle. The shard key must spread data evenly.',
+        },
+      ],
+      underTheHood: [
+        'Resharding: shards fill unevenly or outgrow their disks. Consistent hashing (a later topic) reduces how much data has to move.',
+        'Celebrity problem: one very popular key overloads its shard, so give it a dedicated shard.',
+        'Joins across shards are hard; a common workaround is to denormalize so queries stay on one table.',
+      ],
+      llmPrompt:
+        'Design a sharding scheme for my users and posts tables using user_id. Show how the app picks the shard, and how I would add a fourth shard later.',
+    },
+  ],
+}
