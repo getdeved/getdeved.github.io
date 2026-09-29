@@ -19,3 +19,10 @@ const METERS: [keyof Metrics, string][] = [
   ['capacity', 'Capacity'], ['availability', 'Availability'], ['speed', 'Speed'], ['complexity', 'Complexity'],
 ]
 
+function loadStep(topic: Topic) {
+  try {
+    const v = Number(localStorage.getItem(`deved:${topic.id}`))
+    return Number.isInteger(v) && v >= 0 && v <= topic.steps.length ? v : 0
+  } catch { return 0 }
+}
+
