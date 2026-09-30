@@ -36,3 +36,8 @@ export default function Guided({ topic, quiz = false, onInspect }: { topic: Topi
   const solved = !finished && (quiz ? tried.some((id) => step.options.find((o) => o.id === id)?.verdict === 'best') : shown)
   const design = buildDesign(topic.steps, idx + (solved ? 1 : 0))
 
+  const go = (i: number, revisit = false) => {
+    setIdx(i); setTried([]); setShown(revisit)
+    try { localStorage.setItem(`deved:${topic.id}`, String(i)) } catch { /* progress just won't persist */ }
+  }
+
