@@ -41,3 +41,101 @@ export default function Guided({ topic, quiz = false, onInspect }: { topic: Topi
     try { localStorage.setItem(`deved:${topic.id}`, String(i)) } catch { /* progress just won't persist */ }
   }
 
+  return (
+    <>
+    <div className="mode">
+      <div className="build-grid guided">
+        <aside className="card docked">
+      <header>
+        <h1>{topic.title}</h1>
+        <p>{topic.intro}</p>
+        <progress value={idx} max={topic.steps.length} aria-label="Progress" />
+      </header>
+          {finished ? (
+            <>
+              <p className="eyebrow">Done</p>
+              <h2>Topic complete</h2>
+              <ul>{topic.recap.map((r) => <li key={r}>{r}</li>)}</ul>
+              <p className="hint">Look at the diagram: which box is still a single point of failure? Click any box to read about it.</p>
+              <button onClick={() => go(0)}>Start over</button>
+            </>
+          ) : (
+            <>
+              {quiz ? (
+                <>
+              <p className="eyebrow">Step {idx + 1} of {topic.steps.length}</p>
+              <h2>{step.title}</h2>
+              <p>{step.situation}</p>
+              <div className="options">
+                {step.options.map((o) => {
+                  const picked = tried.includes(o.id)
+                  return (
+                    <div key={o.id}>
+                      <button className={`opt ${picked ? o.verdict : ''}`} disabled={solved} onClick={() => !picked && setTried([...tried, o.id])}>
+                        {o.label}
+                      </button>
+                      {picked && <p className={`feedback ${o.verdict}`}><b>{BADGE[o.verdict]}.</b> {o.feedback}</p>}
+                    </div>
+                  )
+                })}
+              </div>
+              {solved && (
+                <>
+                  <h3>Under the hood</h3>
+                  <ul>{step.underTheHood.map((t) => <li key={t}>{t}</li>)}</ul>
+                  <h3>Now you can ask your LLM</h3>
+                  <blockquote>{step.llmPrompt}</blockquote>
+                  <button onClick={() => go(idx + 1)}>{idx + 1 === topic.steps.length ? 'Finish' : 'Next step'}</button>
+                </>
+              )}
+                </>
+              ) : (
+                <>
+              <p className="eyebrow">Step {idx + 1} of {topic.steps.length}</p>
+              <h2>{step.title}</h2>
+              <h3>The problem</h3>
+              <p>{statement(step.situation)}</p>
+              <h3>The approach</h3>
+              <p className="idea"><b>{best!.label}</b></p>
+              <p>{unRight(best!.feedback)}</p>
+              <h3>Other approaches</h3>
+              <ul className="alts">
+                {step.options.filter((o) => o.verdict !== 'best').map((o) => (
+                  <li key={o.id}><b>{o.label}</b> <span className={`tag ${o.verdict}`}>{ALT_TAG[o.verdict]}</span><br />{o.feedback}</li>
+                ))}
+              </ul>
+              <h3>Under the hood</h3>
+              <ul>{step.underTheHood.map((t) => <li key={t}>{t}</li>)}</ul>
+              <h3>Ask your LLM</h3>
+              <blockquote>{step.llmPrompt}</blockquote>
+              <div className="lesson-actions">
+                {idx > 0 && <button onClick={() => go(idx - 1, true)}>Back</button>}
+                {solved
+                  ? <button className="run" onClick={() => go(idx + 1)}>{idx + 1 === topic.steps.length ? 'Finish' : 'Next step'}</button>
+                  : <button className="run" onClick={() => setShown(true)}>Show it on the diagram</button>}
+              </div>
+                </>
+              )}
+            </>
+          )}
+        </aside>
+        <div className="build-main">
+        <section className="stage">
+          <Diagram design={design} onNodeClick={(n) => onInspect({ kind: kindOf(n), name: n.label, tip: n.tip })} />
+          <div className="meters">
+            {METERS.map(([k, label]) => (
+              <div key={k} className={`meter ${k}`}>
+                <span>{label}</span>
+                <div className="bar"><i style={{ width: `${Math.min(100, design.metrics[k])}%` }} /></div>
+                <b>{design.metrics[k]}</b>
+              </div>
+            ))}
+          </div>
+          <p className="hint stage-hint">Click any box to learn what it is.</p>
+        </section>
+        </div>
+      </div>
+    </div>
+    </>
+  )
+}
