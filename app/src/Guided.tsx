@@ -26,3 +26,13 @@ function loadStep(topic: Topic) {
   } catch { return 0 }
 }
 
+export default function Guided({ topic, quiz = false, onInspect }: { topic: Topic; quiz?: boolean; onInspect: (i: Inspect) => void }) {
+  const [idx, setIdx] = useState(() => loadStep(topic))
+  const [tried, setTried] = useState<string[]>([])
+  const [shown, setShown] = useState(false) // lesson mode: has the diagram been updated for this step?
+  const finished = idx >= topic.steps.length
+  const step = topic.steps[idx]
+  const best = step?.options.find((o) => o.verdict === 'best')
+  const solved = !finished && (quiz ? tried.some((id) => step.options.find((o) => o.id === id)?.verdict === 'best') : shown)
+  const design = buildDesign(topic.steps, idx + (solved ? 1 : 0))
+
