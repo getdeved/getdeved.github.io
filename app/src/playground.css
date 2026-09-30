@@ -30,3 +30,34 @@ progress { width: 100%; height: 4px; accent-color: var(--accent) }
 .opt { width: 100%; text-align: left }
 .opt:hover:not(:disabled) { border-color: var(--accent) }
 .opt:disabled { cursor: default }
+.opt.best { border-color: var(--best) } .opt.ok { border-color: var(--ok) }
+.opt.premature { border-color: var(--premature) } .opt.wrong { border-color: var(--wrong) }
+.feedback { font-size: .9rem; margin: 6px 0 4px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px }
+.feedback.best { border-color: var(--best) } .feedback.ok { border-color: var(--ok) }
+.feedback.premature { border-color: var(--premature) } .feedback.wrong { border-color: var(--wrong) }
+blockquote { margin: 0 0 16px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-family: var(--mono); font-size: .85rem; line-height: 1.55 }
+.card ul { padding-left: 20px; margin: 0 0 8px } .card li { margin-bottom: 4px }
+.card > button:last-child { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
+.hint { color: var(--muted) }
+
+/* topics dropdown */
+.topics { position: relative }
+.topics summary { cursor: pointer; color: var(--muted); font-size: .92rem; list-style: none }
+.topics summary:hover { color: var(--text) }
+.topics-panel { position: absolute; right: 0; top: 36px; z-index: 5; width: min(420px, calc(100vw - 40px)); max-height: 70vh; overflow: auto; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 20px 50px -20px rgb(0 0 0 / .6) }
+.topics-panel h3 { font-family: var(--mono); font-size: .75rem; font-weight: 500; color: var(--muted); margin: 14px 0 6px }
+.topics-panel h3:first-child { margin-top: 0 }
+.topics-panel ul { list-style: none; margin: 0; padding: 0 }
+.topics-panel li { display: flex; justify-content: space-between; padding: 4px 0; font-size: .9rem }
+.topics-panel li.soon { color: var(--muted) }
+.topics-panel li span { font-family: var(--mono); font-size: .7rem; align-self: center }
+.diagram .empty { font-size: 16px; fill: var(--muted) }
+
+/* modes */
+.modes { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; width: fit-content; max-width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px }
+.modes button { font: inherit; font-size: .92rem; padding: 7px 14px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer }
+.modes button:hover:not(:disabled) { color: var(--text) }
+.modes button.on { background: var(--raised); color: var(--text); box-shadow: inset 0 0 0 1px var(--line) }
+.modes button:disabled { cursor: default; opacity: .6 }
+.modes button span { font-family: var(--mono); font-size: .68rem; margin-left: 6px }
+.mode-blurb { color: var(--muted); margin: 10px 0 18px }
