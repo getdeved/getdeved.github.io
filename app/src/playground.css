@@ -94,3 +94,34 @@ dialog.info button.danger { color: var(--wrong); border-color: var(--wrong); bac
 .tests { list-style: none; padding: 0; margin: 14px 0 0 }
 .tests li { padding: 10px 0; border-top: 1px solid var(--line) }
 .tests .t-head { display: flex; align-items: center; gap: 8px }
+.tests p { margin: 2px 0 0 24px; font-size: .88rem; color: var(--muted) }
+.tests .pass .t-head { color: var(--best) } .tests .fail .t-head { color: var(--wrong) }
+.tests .t-hint { color: var(--text) }
+.linklike { background: none !important; border: 0 !important; padding: 0 !important; color: var(--accent) !important; text-decoration: underline; text-underline-offset: 3px; font: inherit }
+
+/* build mode: library on the left */
+.build-grid { display: grid; gap: 16px; align-items: start }
+@media (min-width: 1000px) { .build-grid { grid-template-columns: 290px 1fr } }
+.build-main { display: grid; gap: 16px; min-width: 0 }
+@media (max-width: 999px) { .library { order: 2 } }
+.library { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px }
+@media (min-width: 1000px) { .library { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto } }
+.library h2 { font-size: 1rem; margin: 0 0 4px }
+.library > .hint { font-size: .82rem; margin: 0 0 12px }
+.lib { padding: 12px 0; border-top: 1px solid var(--line); cursor: grab }
+.lib.hinted { border: 1px solid var(--accent); border-radius: 10px; padding: 12px 10px; margin: 8px -10px; background: color-mix(in srgb, var(--accent) 7%, transparent) }
+.lib.hinted + .lib { border-top-color: transparent }
+.lib-head { display: flex; align-items: center; gap: 8px }
+.lib-head svg { color: var(--accent); flex: none }
+.lib-head b { flex: 1; font-size: .92rem }
+.lib-head button, .row button { font: inherit; font-size: .82rem; cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--raised); color: var(--text); padding: 3px 10px }
+.lib-head button:hover { border-color: var(--accent) }
+.lib p { margin: 6px 0 0; font-size: .84rem; line-height: 1.5; color: var(--muted) }
+.lib details { margin-top: 6px }
+.lib summary { font-size: .8rem; color: var(--accent); cursor: pointer }
+.challenge progress { margin: 6px 0 4px }
+.goal { margin: 4px 0 12px }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.row button { font-size: .95rem; padding: 9px 14px; border-radius: 8px }
+.row .run { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
+.outcome { margin: 14px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: .92rem }
