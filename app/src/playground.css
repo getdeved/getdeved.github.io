@@ -154,3 +154,38 @@ dialog.info button.danger { color: var(--wrong); border-color: var(--wrong); bac
 /* guided: lesson docked left, diagram large */
 .docked h1 { font-size: 1.3rem }
 .docked header p { font-size: .9rem }
+.docked h2 { margin-top: 18px }
+@media (min-width: 1000px) {
+  .play.wide .guided { grid-template-columns: 420px 1fr }
+  .play.wide .card.docked { border-radius: 0; border-width: 0 1px 0 0; position: sticky; top: 0; height: 100vh; overflow: auto; padding: 20px }
+}
+@media (min-width: 1400px) { .play.wide .guided .build-main { grid-template-columns: 1fr } }
+@media (max-width: 999px) { .card.docked { margin: 0 20px } .guided .build-main { padding: 0 20px } }
+
+/* desktop: the playground fits the window; panels scroll internally, the canvas shrinks to fit */
+@media (min-width: 1000px) {
+  .pg { height: 100vh; display: flex; flex-direction: column; overflow: hidden }
+  .pg .play { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 0 }
+  .pg .mode { flex: 1; min-height: 0; display: flex; flex-direction: column }
+  .pg .build-grid { flex: 1; min-height: 0; align-items: stretch }
+  .pg .play.wide .library, .pg .play.wide .card.docked { position: static; height: auto; max-height: none; overflow: auto }
+  .pg .build-main { min-height: 0; padding-bottom: 16px; grid-template-rows: auto minmax(0, 1fr) }
+  .pg .guided .build-main { grid-template-rows: minmax(0, 1fr) }
+  .pg .stage { display: flex; flex-direction: column; min-height: 0 }
+  .pg .stage .diagram { flex: 1; min-height: 0; height: 100%; width: 100% }
+  .pg .stage .empty-note { flex: none }
+}
+@media (min-width: 1400px) {
+  .pg .build-main { grid-template-rows: minmax(0, 1fr) }
+  .pg .play.wide .challenge { position: static; max-height: 100%; overflow: auto }
+}
+.pg .nav { width: 100%; flex: none }
+.pg .play, .pg .mode { width: 100% }
+@media (min-width: 1000px) { .pg .stage .diagram { flex: 1 1 0; height: 0 } }
+@media (min-width: 1000px) { .pg .build-grid { grid-template-rows: minmax(0, 1fr) } }
+@media (min-width: 1000px) { .pg .play.wide .build-main { align-items: stretch } }
+@media (min-width: 1000px) { .pg .play.wide .build-grid, .pg .play.wide .guided { grid-template-columns: 360px 1fr } }
+
+/* whole challenge card reflects the last run */
+.challenge { transition: background .35s, border-color .35s }
+.challenge.pass { border-color: var(--best); background: color-mix(in srgb, var(--best) 14%, var(--panel)) }
