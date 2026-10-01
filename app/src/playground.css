@@ -125,3 +125,32 @@ dialog.info button.danger { color: var(--wrong); border-color: var(--wrong); bac
 .row button { font-size: .95rem; padding: 9px 14px; border-radius: 8px }
 .row .run { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
 .outcome { margin: 14px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: .92rem }
+.outcome.pass { border-color: var(--best) } .outcome.fail { border-color: var(--wrong) }
+.outcome b { font-weight: 600 }
+.challenge .tests p { margin-left: 24px }
+
+/* build mode: library docked to the window edge, canvas uses the rest */
+.play.wide { max-width: none; padding: 8px 0 0 }
+.play.wide .modes, .play.wide .mode-blurb { margin-left: 20px }
+.play.wide .build-main { padding: 0 20px 40px }
+@media (min-width: 1000px) {
+  .play.wide .build-grid { gap: 0; grid-template-columns: 300px 1fr }
+  .play.wide .library { border-radius: 0; border-width: 0 1px 0 0; top: 0; max-height: 100vh; height: 100vh }
+}
+@media (max-width: 999px) { .play.wide .library { margin: 0 20px 20px } }
+.nav.wide { max-width: none }
+@media (min-width: 1400px) {
+  .play.wide .build-main { grid-template-columns: 1fr 360px; align-items: start }
+  .play.wide .challenge { order: 2; position: sticky; top: 12px }
+}
+
+.play .stage { position: relative }
+.zoom { position: absolute; top: 24px; right: 24px; z-index: 2; display: flex; align-items: center; gap: 2px; padding: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px }
+.zoom button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--text); cursor: pointer }
+.zoom button:hover { background: var(--raised) }
+.zoom span { font-family: var(--mono); font-size: .75rem; min-width: 42px; text-align: center; color: var(--muted) }
+.canvas { cursor: grab }
+
+/* guided: lesson docked left, diagram large */
+.docked h1 { font-size: 1.3rem }
+.docked header p { font-size: .9rem }
