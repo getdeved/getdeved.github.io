@@ -189,3 +189,35 @@ dialog.info button.danger { color: var(--wrong); border-color: var(--wrong); bac
 /* whole challenge card reflects the last run */
 .challenge { transition: background .35s, border-color .35s }
 .challenge.pass { border-color: var(--best); background: color-mix(in srgb, var(--best) 14%, var(--panel)) }
+.challenge.fail { border-color: var(--wrong); background: color-mix(in srgb, var(--wrong) 14%, var(--panel)) }
+.challenge.pass .outcome { border-color: var(--best) } .challenge.fail .outcome { border-color: var(--wrong) }
+
+/* estimation topic */
+.build-main.scroll { overflow: auto }
+.tips { margin: 14px 0 0 }
+.tips > div { padding: 12px 0; border-top: 1px solid var(--line) }
+.tips dt { font-weight: 600 }
+.tips dd { margin: 4px 0 0; color: var(--muted); font-size: .9rem; line-height: 1.5 }
+.docked h3 { font-family: var(--mono); font-size: .75rem; font-weight: 500; color: var(--muted); margin: 20px 0 6px }
+.assume { padding-left: 18px; margin: 0 0 12px } .assume li { margin-bottom: 4px; font-size: .92rem }
+.build-main.scroll .stage { flex: none; margin-bottom: 0 }
+.build-main.scroll { align-content: start; grid-template-rows: none !important; gap: 16px }
+.stage h2 { margin: 0 0 4px; font-size: 1.1rem }
+.sect-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px }
+.toggle, .chips button { font: inherit; font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); cursor: pointer }
+.toggle[aria-pressed=true], .chips button.on { border-color: var(--accent); color: var(--accent) }
+.ref { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .92rem }
+.ref th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: .75rem; color: var(--muted); padding: 6px 0 }
+.ref td { padding: 8px 0; border-top: 1px solid var(--line) }
+.bars { list-style: none; padding: 0; margin: 12px 0 0 }
+.bars li { display: grid; grid-template-columns: minmax(150px, 230px) 1fr 110px; gap: 12px; align-items: center; padding: 6px 0; font-size: .9rem }
+.bars b { font-family: var(--mono); font-weight: 500; text-align: right; font-size: .82rem }
+.bars .bar { height: 8px }
+.lessons { margin: 14px 0 0; padding-left: 18px; color: var(--muted); font-size: .9rem }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px }
+.nines-name { margin: 16px 0 8px; color: var(--muted); font-size: .9rem }
+.down { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
+.down div { padding: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px }
+.down b { display: block; font-size: 1.15rem; font-family: var(--mono); font-weight: 500 }
+.down span { color: var(--muted); font-size: .8rem }
+.sheet ol { list-style: none; margin: 14px 0 0; padding: 0 }
