@@ -221,3 +221,35 @@ dialog.info button.danger { color: var(--wrong); border-color: var(--wrong); bac
 .down b { display: block; font-size: 1.15rem; font-family: var(--mono); font-weight: 500 }
 .down span { color: var(--muted); font-size: .8rem }
 .sheet ol { list-style: none; margin: 14px 0 0; padding: 0 }
+.sheet li { padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); transition: background .35s, border-color .35s }
+.sheet li.done { color: var(--text) }
+.sheet li.active { color: var(--text); background: var(--bg); border-color: var(--muted) }
+.sheet li.active.ok { border-color: var(--best); background: color-mix(in srgb, var(--best) 14%, var(--panel)) }
+.sheet li.active.fail { border-color: var(--wrong); background: color-mix(in srgb, var(--wrong) 14%, var(--panel)) }
+.row-head { display: flex; align-items: center; gap: 8px }
+.row-head svg { flex: none; color: var(--muted) } .done .row-head svg { color: var(--best) }
+.row-head .val { margin-left: auto; font-family: var(--mono); font-size: .9rem }
+.row-head small { color: var(--muted) }
+.how { margin: 6px 0 0 24px; font-size: .85rem; color: var(--muted) }
+.ask p { margin: 10px 0 8px }
+.ask form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.ask input { font: inherit; width: 180px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text) }
+.ask .unit { font-family: var(--mono); font-size: .85rem; color: var(--muted) }
+.ask button, .docked .run { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--text); padding: 9px 14px }
+.ask .run, .docked .run { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
+.ask .outcome { margin-top: 10px }
+@media (max-width: 700px) { .bars li { grid-template-columns: 1fr 90px } .bars .bar { grid-column: 1 / -1; order: 3 } .down { grid-template-columns: 1fr } }
+.pg .build-main.scroll .stage { min-height: auto }
+.challenge .group { font-size: .85rem; color: var(--muted); margin: 10px 0 0 }
+.challenge .group b { color: var(--text); font-weight: 600 }
+
+/* lesson mode */
+.idea { font-size: 1.05rem; margin: 0 0 6px }
+.alts { list-style: none; padding: 0 !important; margin: 0 }
+.alts li { padding: 10px 0; border-top: 1px solid var(--line); font-size: .9rem; line-height: 1.5; color: var(--muted) }
+.alts li b { color: var(--text); font-weight: 600 }
+.tag { display: inline-block; font-family: var(--mono); font-size: .68rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; vertical-align: 1px }
+.tag.ok { color: var(--ok); border-color: var(--ok) } .tag.premature { color: var(--premature); border-color: var(--premature) } .tag.wrong { color: var(--wrong); border-color: var(--wrong) }
+.lesson-actions { display: flex; gap: 8px; position: sticky; bottom: -20px; margin: 20px -20px -20px; padding: 14px 20px; background: var(--panel); border-top: 1px solid var(--line) }
+.lesson-actions button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--text); padding: 9px 14px }
+.lesson-actions .run { flex: 1; background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600 }
