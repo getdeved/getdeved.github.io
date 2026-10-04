@@ -50,3 +50,33 @@ export const glossary: Record<string, Info> = {
     use: 'Spreads read traffic and keeps a copy of the data. If the primary dies, a replica can be promoted.',
     watch: 'It can lag behind the primary, so a read right after a write may return old data.',
   },
+  cache: {
+    name: 'Cache',
+    what: 'A fast in-memory store (such as Redis or Memcached) holding results of expensive or frequent reads.',
+    use: 'Check the cache first; on a miss read the database and store the answer. Takes read load off the database.',
+    watch: 'Data can go stale, it disappears on restart, and a single cache server is a single point of failure. Set a TTL and an eviction policy.',
+  },
+  cdn: {
+    name: 'CDN',
+    what: 'A network of servers around the world that keep copies of your static files (images, CSS, JS, video).',
+    use: 'Serves files from a location near the user, so pages load faster and your servers do less work.',
+    watch: 'You pay per transfer, and updated files must be invalidated or versioned (image.png?v=2).',
+  },
+  session: {
+    name: 'Session store',
+    what: 'A shared store (often a cache or NoSQL database) that holds who is logged in and other per-user state.',
+    use: 'Lets web servers stay stateless: any server can handle any request, so servers can be added or removed freely.',
+    watch: 'It becomes critical infrastructure; if it is down, nobody stays logged in.',
+  },
+  queue: {
+    name: 'Message queue',
+    what: 'A durable buffer. Producers put messages (jobs) in; consumers take them out when ready.',
+    use: 'Moves slow work off the request path, and lets producers and consumers scale and fail independently.',
+    watch: 'Work becomes asynchronous: you must handle retries, duplicates and the user not seeing the result immediately.',
+  },
+  worker: {
+    name: 'Worker',
+    what: 'A process that pulls jobs from a queue and performs them, for example resizing a photo.',
+    use: 'Runs the slow, heavy work in the background. Add more workers when the queue grows.',
+    watch: 'Jobs may run twice after a failure, so make them safe to repeat (idempotent).',
+  },
