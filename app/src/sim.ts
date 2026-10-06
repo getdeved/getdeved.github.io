@@ -25,3 +25,6 @@ const lbWebs = (g: G) => uniq(entryLbs(g).flatMap((l) => peers(g, l.id).filter((
 const webs = (g: G) => uniq([...directWebs(g), ...lbWebs(g)])
 const reachesData = (g: G, s: { id: string }) => peers(g, s.id).some(isStore)
 
+const pass = (why: string): Result => ({ status: 'pass', why })
+const fail = (why: string, hint: string): Result => ({ status: 'fail', why, hint })
+
