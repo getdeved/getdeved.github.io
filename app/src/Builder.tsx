@@ -102,3 +102,19 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
     }
   }
 
+  const graph = () => ({ nodes: nodes.map((n) => ({ id: n.id, kind: n.kind! })), edges })
+  const runOne = () => setResult(tests[idx].run(graph()))
+  const runAll = () => { const g = graph(); setAll(Object.fromEntries(finalTests.map((t) => [t.id, t.run(g)]))) }
+  const next = () => {
+    setResult(null)
+    setIdx(idx + 1)
+    if (idx + 1 === tests.length) runAll()
+  }
+  const reset = () => { setNodes(start.nodes); setEdges(start.edges); setIdx(0); setResult(null); setAll(null) }
+  const byId = new Map(nodes.map((n) => [n.id, n]))
+  const total = tests.length
+  const final = idx >= total
+  const test = tests[idx]
+  const hinted = test && (test.reveal || result?.status === 'fail') ? test.uses : []
+  const passed = all ? finalTests.filter((t) => all[t.id]?.status === 'pass').length : 0
+
