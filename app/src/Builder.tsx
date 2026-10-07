@@ -58,3 +58,18 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
   }
   const nodeAt = (x: number, y: number) => nodes.find((n) => Math.abs(x - n.x) <= W / 2 && Math.abs(y - n.y) <= H / 2)
 
+  const add = (kind: string, at?: { x: number; y: number }) => {
+    let pos = at
+    if (!pos) { // first free grid slot
+      outer: for (let x = 260; x <= 900; x += 130) for (let y = 110; y <= 520; y += 100)
+        if (!nodes.some((n) => Math.abs(n.x - x) < 115 && Math.abs(n.y - y) < 80)) { pos = { x, y }; break outer }
+      pos ??= { x: 500, y: 300 }
+    }
+    const item = palette.find((p) => p.kind === kind)!
+    setNodes((ns) => [...ns, { id: `n${nextId.current++}`, kind, icon: item.icon, label: item.label, tip: item.tip, x: clamp(pos!.x, 60, 940), y: clamp(pos!.y, 45, 555) }])
+  }
+  const remove = (id: string) => {
+    setNodes((ns) => ns.filter((n) => n.id !== id))
+    setEdges((es) => es.filter((e) => e.from !== id && e.to !== id))
+  }
+
