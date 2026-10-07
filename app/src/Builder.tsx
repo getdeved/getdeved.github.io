@@ -142,3 +142,56 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
           })}
         </aside>
 
+        <div className="build-main">
+          <section className={`card challenge ${final ? "" : result?.status ?? ""}`}>
+            {final ? (
+              <>
+                <p className="eyebrow">All {total} challenges done</p>
+                <h2>Full run</h2>
+                <p>Every scenario against the design you built.</p>
+                <p className="score" role="status">{passed} of {finalTests.length} {finalTests[0]?.group ? 'problems solved' : 'scenarios survived'}</p>
+                <ul className="tests">
+                  {finalTests.map((t) => {
+                    const r = all?.[t.id]
+                    return (
+                      <li key={t.id} className={r?.status ?? 'idle'}>
+                        <div className="t-head">
+                          {r?.status === 'pass' ? <Check size={16} aria-label="Passed" /> : r?.status === 'fail' ? <X size={16} aria-label="Failed" /> : <Minus size={16} aria-label="Not applicable" />}
+                          <b>{t.group ?? t.name}</b>
+                        </div>
+                        {r && <p>{r.why}</p>}
+                        {r?.status === 'fail' && <p className="t-hint">{r.hint}</p>}
+                      </li>
+                    )
+                  })}
+                </ul>
+                <div className="row">
+                  <button className="run" onClick={runAll}>Run again</button>
+                  <button onClick={reset}>Start over</button>
+                </div>
+                <p className="hint">The canvas is still editable: change the design and run again.</p>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow">Challenge {idx + 1} of {total}{test.part && ` · ${test.part}`}</p>
+                <progress value={idx} max={total} aria-label="Progress" />
+                {test.group && <p className="group"><b>{test.group}.</b> {test.context}</p>}
+                <h2>{test.name}</h2>
+                {test.scenario && <p>{test.scenario}</p>}
+                <p className="goal"><b>Goal:</b> {test.goal}</p>
+                <div className="row">
+                  {result?.status === 'pass'
+                    ? <button className="run" onClick={next}>{idx + 1 === total ? 'See the full run' : 'Next challenge'}</button>
+                    : <button className="run" onClick={runOne}>Run test</button>}
+                  {idx > 0 && <button onClick={reset}>Start over</button>}
+                </div>
+                {result && (
+                  <p className={`outcome ${result.status}`} role="status">
+                    <b>{result.status === 'pass' ? 'Passed. ' : result.status === 'fail' ? 'Not yet. ' : ''}</b>{result.why}
+                    {result.status === 'fail' && <> {result.hint} <button className="linklike" onClick={() => onLearn(test.learn)}>Learn this in guided mode</button></>}
+                  </p>
+                )}
+              </>
+            )}
+          </section>
+
