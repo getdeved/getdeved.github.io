@@ -73,3 +73,32 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
     setEdges((es) => es.filter((e) => e.from !== id && e.to !== id))
   }
 
+  const onMove = (e: React.PointerEvent) => {
+    const p = point(e)
+    const d = drag.current
+    if (pan.current) {
+      const k = 1000 / view.z / svg.current!.clientWidth, a = pan.current
+      setView((v) => ({ ...v, x: a.vx - (e.clientX - a.sx) * k, y: a.vy - (e.clientY - a.sy) * k }))
+    } else if (d) {
+      if (Math.hypot(p.x - d.sx, p.y - d.sy) > 4) d.moved = true
+      if (d.moved) setNodes((ns) => ns.map((n) => (n.id === d.id ? { ...n, x: clamp(p.x - d.ox, 60, 940), y: clamp(p.y - d.oy, 45, 555) } : n)))
+    } else if (conn) setConn({ ...conn, x: p.x, y: p.y })
+  }
+  const onUp = (e: React.PointerEvent) => {
+    const p = point(e)
+    const d = drag.current
+    if (pan.current) pan.current = null
+    else if (d) {
+      drag.current = null
+      if (!d.moved) {
+        const n = nodes.find((x) => x.id === d.id)!
+        onInspect({ kind: n.kind!, name: n.label, tip: n.tip, onRemove: n.id === 'users' ? undefined : () => remove(n.id) })
+      }
+    } else if (conn) {
+      const t = nodeAt(p.x, p.y)
+      if (t && t.id !== conn.from && !edges.some((x) => (x.from === conn.from && x.to === t.id) || (x.from === t.id && x.to === conn.from)))
+        setEdges((es) => [...es, { from: conn.from, to: t.id }])
+      setConn(null)
+    }
+  }
+
