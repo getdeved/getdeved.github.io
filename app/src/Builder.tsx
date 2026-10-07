@@ -118,3 +118,27 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
   const hinted = test && (test.reveal || result?.status === 'fail') ? test.uses : []
   const passed = all ? finalTests.filter((t) => all[t.id]?.status === 'pass').length : 0
 
+  return (
+    <div className="mode">
+      <div className="build-grid">
+        <aside className="library" aria-label="Component reference">
+          <h2>Components</h2>
+          <p className="hint">What each piece is and where it fits. Drag onto the canvas, or press Add.</p>
+          {palette.map((p) => {
+            const g = p.tip ? { name: p.label, what: p.tip, use: '', watch: '' } : glossary[p.kind], Icon = icons[p.icon]
+            return (
+              <div key={p.kind} className={`lib ${hinted.includes(p.kind) ? 'hinted' : ''}`} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', p.kind)}>
+                <div className="lib-head"><Icon size={16} /><b>{g.name}</b><button onClick={() => add(p.kind)} aria-label={`Add ${g.name}`}>Add</button></div>
+                <p>{g.what}</p>
+                {g.use && (
+                  <details>
+                    <summary>Where to use it</summary>
+                    <p>{g.use}</p>
+                    <p><b>Watch out:</b> {g.watch}</p>
+                  </details>
+                )}
+              </div>
+            )
+          })}
+        </aside>
+
