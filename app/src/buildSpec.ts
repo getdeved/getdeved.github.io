@@ -82,3 +82,37 @@ export function autoSpec(topic: Topic): BuildSpec {
       const kind = p.node ? kindOf(p.node.label) : ''
       const a = p.edge ? lbl(p.edge.from) : '', c = p.edge ? lbl(p.edge.to) : ''
 
+      tests.push({
+        id: `${step.id}-${k}`, learn: i, group: step.title, context: step.situation, part: `part ${k + 1} of ${pieces.length}`,
+        groupEnd: last, reveal: true,
+        uses: p.node ? [kind] : [a, c],
+        name: p.node ? `Add ${kind}` : `Connect ${a} and ${c}`,
+        scenario: p.node ? (p.node.tip ?? '') : p.edge!.label ? `This link carries: ${p.edge!.label}.` : `${a} and ${c} need to talk to each other here.`,
+        goal: p.node
+          ? `Put ${kind} on the canvas: press Add next to it in the list on the left, or drag it in.`
+          : `Draw a link: drag from the dot on the right edge of ${a} to ${c} (or the other way round).`,
+        run: (g: G): Result => {
+          const kinds = new Map(g.nodes.map((n) => [n.id, n.kind]))
+          const missing: string[] = []
+          for (const [kd, count] of need) {
+            const have = g.nodes.filter((n) => n.kind === kd).length
+            if (have < count) missing.push(count - have > 1 ? `${count - have} more ${kd}` : kd)
+          }
+          const linked = (pr: string) => g.edges.some((e) => [kinds.get(e.from), kinds.get(e.to)].sort().join('|') === pr)
+          const unlinked = [...needPairs].filter((pr) => !linked(pr)).map((pr) => pr.split('|').join(' and '))
+          if (!missing.length && !unlinked.length) {
+            return { status: 'pass', why: last ? `Why this works: ${best.feedback}` : p.node ? 'Placed.' : 'Connected.' }
+          }
+          return {
+            status: 'fail', why: 'Not yet.',
+            hint: [missing.length ? `Add ${missing.join(', ')}.` : '', unlinked.length ? `Connect ${unlinked.join('; ')}.` : ''].filter(Boolean).join(' '),
+          }
+        },
+      })
+    })
+  })
+
+  const spec: BuildSpec = { palette: [...palette.values()], start: { nodes: [], edges: [] }, tests }
+  cache.set(topic.id, spec)
+  return spec
+}
