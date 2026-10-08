@@ -195,3 +195,50 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
             )}
           </section>
 
+          <section className="stage">
+            <div className="zoom" role="group" aria-label="Zoom">
+              <button onClick={() => zoom(1 / 1.25)} aria-label="Zoom out"><Minus size={16} /></button>
+              <span>{Math.round(view.z * 100)}%</span>
+              <button onClick={() => zoom(1.25)} aria-label="Zoom in"><Plus size={16} /></button>
+              <button onClick={() => setView({ x: 0, y: 0, z: 1 })} aria-label="Reset view"><Maximize2 size={16} /></button>
+            </div>
+            <svg ref={svg} viewBox={`${view.x} ${view.y} ${1000 / view.z} ${600 / view.z}`} className="diagram canvas" role="application" aria-label="Design canvas"
+              onPointerMove={onMove} onPointerUp={onUp}
+              onPointerDown={(e) => { if (e.target === e.currentTarget) { svg.current!.setPointerCapture(e.pointerId); pan.current = { sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y } } }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); const k = e.dataTransfer.getData('text/plain'); if (palette.some((p) => p.kind === k)) add(k, point(e)) }}>
+              <Defs />
+              {edges.map((e, i) => {
+                const a = byId.get(e.from)!, b = byId.get(e.to)!
+                const dx = b.x - a.x, dy = b.y - a.y
+                const s = clip(dx, dy), t = clip(-dx, -dy)
+                const p = { x1: a.x + s.x, y1: a.y + s.y, x2: b.x + t.x, y2: b.y + t.y }
+                return (
+                  <g key={i} className="edge removable" onClick={() => setEdges((es) => es.filter((x) => x !== e))}>
+                    <title>Click to remove this connection</title>
+                    <line {...p} markerEnd="url(#arrow)" />
+                    <line {...p} className="hit" />
+                  </g>
+                )
+              })}
+              {conn && <line className="ghost" x1={byId.get(conn.from)!.x} y1={byId.get(conn.from)!.y} x2={conn.x} y2={conn.y} />}
+              {nodes.map((n) => (
+                <NodeBox key={n.id} n={n} className="clickable draggable"
+                  onPointerDown={(e) => { e.preventDefault(); const p = point(e); svg.current!.setPointerCapture(e.pointerId); drag.current = { id: n.id, ox: p.x - n.x, oy: p.y - n.y, sx: p.x, sy: p.y, moved: false } }}>
+                  <circle className="port" cx={W} cy={H / 2} r={7}
+                    onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); svg.current!.setPointerCapture(e.pointerId); setConn({ from: n.id, x: n.x, y: n.y }) }}>
+                    <title>Drag to another box to connect</title>
+                  </circle>
+                </NodeBox>
+              ))}
+            </svg>
+            <div className="canvas-actions">
+              <span className="hint">Drag from a box’s right-hand dot to connect. Click a box to learn about it. Click a line to remove it. Drag the background to pan; Ctrl + scroll to zoom.</span>
+              <button onClick={() => { setNodes(start.nodes); setEdges(start.edges) }}>Clear canvas</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
