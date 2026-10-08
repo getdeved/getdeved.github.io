@@ -55,3 +55,30 @@ export function autoSpec(topic: Topic): BuildSpec {
     const byId = new Map(design.nodes.map((n) => [n.id, n]))
     const lbl = (id: string) => kindOf(byId.get(id)!.label)
 
+    type Piece = { node?: NodeDef; edge?: EdgeDef }
+    const pieces: Piece[] = []
+    const placed = new Set(design.nodes.filter((n) => beforeIds.has(n.id)).map((n) => n.id))
+    const done = new Set<string>()
+    const fresh = (e: EdgeDef) => !beforeEdges.has(edgeKey(e)) && !done.has(edgeKey(e))
+    for (const e of design.edges) if (placed.has(e.from) && placed.has(e.to) && fresh(e)) { pieces.push({ edge: e }); done.add(edgeKey(e)) }
+    for (const nd of design.nodes.filter((n) => !beforeIds.has(n.id))) {
+      pieces.push({ node: nd }); placed.add(nd.id)
+      for (const e of design.edges) if ((e.from === nd.id || e.to === nd.id) && placed.has(e.from) && placed.has(e.to) && fresh(e)) { pieces.push({ edge: e }); done.add(edgeKey(e)) }
+    }
+    if (!pieces.length) return // a concept-only step has nothing to build
+
+    // Requirements grow piece by piece: everything the earlier steps built, plus the pieces so far.
+    const want = new Map<string, number>()
+    const pairs = new Set<string>()
+    const pair = (e: EdgeDef) => [lbl(e.from), lbl(e.to)].sort().join('|')
+    for (const n of design.nodes) if (beforeIds.has(n.id)) want.set(kindOf(n.label), (want.get(kindOf(n.label)) ?? 0) + 1)
+    for (const e of design.edges) if (beforeEdges.has(edgeKey(e))) pairs.add(pair(e))
+
+    pieces.forEach((p, k) => {
+      if (p.node) want.set(kindOf(p.node.label), (want.get(kindOf(p.node.label)) ?? 0) + 1)
+      else pairs.add(pair(p.edge!))
+      const need = new Map(want), needPairs = new Set(pairs)
+      const last = k === pieces.length - 1
+      const kind = p.node ? kindOf(p.node.label) : ''
+      const a = p.edge ? lbl(p.edge.from) : '', c = p.edge ? lbl(p.edge.to) : ''
+
