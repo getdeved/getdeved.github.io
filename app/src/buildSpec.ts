@@ -27,3 +27,31 @@ export const scalingSpec: BuildSpec = {
   tests: scalingTests,
 }
 
+// "Web 1", "Web N", "Node A", "Replica B2" are all the same kind of box.
+export const kindOf = (label: string) => label.replace(/\s+([A-Z]|\d+|[A-Z]\d+)$/, '').trim()
+
+const cache = new Map<string, BuildSpec>()
+
+// Each Guided step becomes a run of tiny challenges: place one component, or draw one link, at a time.
+export function autoSpec(topic: Topic): BuildSpec {
+  const hit = cache.get(topic.id)
+  if (hit) return hit
+
+  const palette = new Map<string, PaletteItem>()
+  for (const s of topic.steps) for (const nd of s.options.find((o) => o.verdict === 'best')?.add?.nodes ?? []) {
+    const kind = kindOf(nd.label)
+    if (!palette.has(kind)) palette.set(kind, { kind, label: kind, icon: nd.icon, tip: nd.tip })
+  }
+
+  const tests: Test[] = []
+  const edgeKey = (e: EdgeDef) => `${e.from}>${e.to}`
+
+  topic.steps.forEach((step, i) => {
+    const best = step.options.find((o) => o.verdict === 'best')!
+    const before = buildDesign(topic.steps, i)
+    const design = buildDesign(topic.steps, i + 1)
+    const beforeIds = new Set(before.nodes.map((n) => n.id))
+    const beforeEdges = new Set(before.edges.map(edgeKey))
+    const byId = new Map(design.nodes.map((n) => [n.id, n]))
+    const lbl = (id: string) => kindOf(byId.get(id)!.label)
+
