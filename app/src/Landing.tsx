@@ -31,3 +31,26 @@ const webFrame = (d: Design): Frame[] => {
 const cachePrompt = steps.find((s) => s.id === 'cache')!.llmPrompt
 const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
+function Hero() {
+  const [n, setN] = useState(reduced ? steps.length : 4)
+  const [auto, setAuto] = useState(!reduced)
+  useEffect(() => {
+    if (!auto) return
+    const t = setInterval(() => setN((v) => (v >= steps.length ? 1 : v + 1)), 2600)
+    return () => clearInterval(t)
+  }, [auto])
+  const step = steps[n - 1]
+  const best = step.options.find((o) => o.verdict === 'best')!
+
+  return (
+    <section className="hero">
+      <h1>Your LLM writes the code.<br />You design the system.</h1>
+      <p className="lead">
+        DevEd teaches new developers how real systems are structured and scaled. You build one
+        decision at a time: pick a fix, see the trade-off, watch the architecture grow.
+      </p>
+      <div className="cta">
+        <a className="btn primary" href="#/playground">Open the playground</a>
+        <a className="btn secondary" href="#curriculum">See the curriculum</a>
+      </div>
+
