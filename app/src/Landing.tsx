@@ -54,3 +54,46 @@ function Hero() {
         <a className="btn secondary" href="#curriculum">See the curriculum</a>
       </div>
 
+      <figure className="window">
+        <figcaption>
+          <span className="problem"><span className="tag">problem</span>{step.title}</span>
+          <span className="fix"><span className="tag">fix</span>{best.label}</span>
+        </figcaption>
+        <Diagram design={laidOut(buildDesign(steps, n))} frames={webFrame(buildDesign(steps, n))} />
+        <div className="ticks" role="group" aria-label="Preview steps">
+          {steps.map((s, i) => (
+            <button key={s.id} className={i < n ? 'on' : ''} aria-label={`Step ${i + 1}: ${s.title}`} aria-current={i + 1 === n} onClick={() => { setAuto(false); setN(i + 1) }} />
+          ))}
+        </div>
+      </figure>
+    </section>
+  )
+}
+
+export default function Landing() {
+  return (
+    <>
+      <Nav>
+        <a className="link" href="#curriculum">Curriculum</a>
+        <a className="link" href="#/glossary">Glossary</a>
+        <a className="btn small primary" href="#/playground">Playground</a>
+      </Nav>
+      <main className="landing">
+        <Hero />
+
+        <section className="split">
+          <h2>Vague prompts get vague systems.</h2>
+          <div className="prompts">
+            <div>
+              <p className="cap">Without the vocabulary</p>
+              <pre>make my app faster and handle more users</pre>
+              <p className="note">The model has to guess your architecture, and it will.</p>
+            </div>
+            <div>
+              <p className="cap">With it</p>
+              <pre>{cachePrompt}</pre>
+              <p className="note">You decided where the cache sits, what it costs, and how it fails.</p>
+            </div>
+          </div>
+        </section>
+
