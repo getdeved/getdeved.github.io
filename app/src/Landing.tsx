@@ -97,3 +97,27 @@ export default function Landing() {
           </div>
         </section>
 
+        <section className="split">
+          <h2>Every lesson is the same loop.</h2>
+          <dl className="loop">
+            <div><dt>A problem with numbers</dt><dd>One server crashed at 2am. Nine in ten queries are reads. Users in Asia wait seconds.</dd></div>
+            <div><dt>Pick a fix</dt><dd>Several options: some right, some plausible but wrong, some premature.</dd></div>
+            <div><dt>See what it costs</dt><dd>Wrong picks teach too. Every fix explains its trade-off and the new problem it creates.</dd></div>
+            <div><dt>Take it to your LLM</dt><dd>Each step ends with a prompt you could actually send.</dd></div>
+          </dl>
+        </section>
+
+        <section className="split" id="curriculum">
+          <h2>{topicCount} topics, from one server to a stock exchange.</h2>
+          <Tracks />
+        </section>
+
+        <section className="closing">
+          <h2>Start with one server.</h2>
+          <a className="btn primary" href="#/playground">Open the playground</a>
+        </section>
+      </main>
+      <footer className="foot">DevEd · learn to design systems</footer>
+    </>
+  )
+}
