@@ -30,3 +30,5 @@ for (const [id, t] of Object.entries(guidedTopics)) {
     { id: 'quiz', name: 'Quiz', blurb: 'Optional: choose the approach yourself first, then see why it works.' },
   ] }
 }
+export const playable = Object.keys(lessons)
+
