@@ -32,3 +32,47 @@ for (const [id, t] of Object.entries(guidedTopics)) {
 }
 export const playable = Object.keys(lessons)
 
+export const tracks: { name: string; topics: { id: string; title: string }[] }[] = [
+  { name: 'Foundations', topics: [
+    { id: 'scaling', title: 'Scale from zero to millions of users' },
+    { id: 'estimation', title: 'Back-of-the-envelope estimation' },
+    { id: 'framework', title: 'A framework for system design' },
+  ] },
+  { name: 'Building blocks', topics: [
+    { id: 'consistent-hashing', title: 'Consistent hashing' },
+    { id: 'key-value', title: 'Key-value store' },
+    { id: 'unique-id', title: 'Unique ID generator' },
+    { id: 'rate-limiter', title: 'Rate limiter' },
+    { id: 'message-queue', title: 'Distributed message queue' },
+  ] },
+  { name: 'Classic systems', topics: [
+    { id: 'url-shortener', title: 'URL shortener' },
+    { id: 'web-crawler', title: 'Web crawler' },
+    { id: 'notifications', title: 'Notification system' },
+    { id: 'news-feed', title: 'News feed' },
+    { id: 'chat', title: 'Chat system' },
+    { id: 'autocomplete', title: 'Search autocomplete' },
+    { id: 'youtube', title: 'YouTube' },
+    { id: 'drive', title: 'Google Drive' },
+  ] },
+  { name: 'Location', topics: [
+    { id: 'proximity', title: 'Proximity service' },
+    { id: 'nearby-friends', title: 'Nearby friends' },
+    { id: 'maps', title: 'Google Maps' },
+  ] },
+  { name: 'Data and infrastructure', topics: [
+    { id: 'metrics', title: 'Metrics and alerting' },
+    { id: 'ad-clicks', title: 'Ad click aggregation' },
+    { id: 'object-storage', title: 'S3-like object storage' },
+    { id: 'leaderboard', title: 'Real-time leaderboard' },
+  ] },
+  { name: 'Correctness-critical', topics: [
+    { id: 'hotel', title: 'Hotel reservation' },
+    { id: 'email', title: 'Distributed email' },
+    { id: 'payments', title: 'Payment system' },
+    { id: 'wallet', title: 'Digital wallet' },
+    { id: 'exchange', title: 'Stock exchange' },
+  ] },
+]
+
+export const topicCount = tracks.reduce((n, t) => n + t.topics.length, 0)
