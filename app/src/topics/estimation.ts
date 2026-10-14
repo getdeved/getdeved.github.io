@@ -31,3 +31,27 @@ export const powers = [
   { exp: 50, approx: '1 quadrillion', unit: 'PB' },
 ]
 
+export const latency = [
+  { name: 'L1 cache reference', ns: 0.5 },
+  { name: 'L2 cache reference', ns: 7 },
+  { name: 'Main memory reference', ns: 100 },
+  { name: 'SSD random read', ns: 150_000 },
+  { name: 'Round trip inside a data center', ns: 500_000 },
+  { name: 'HDD seek', ns: 10_000_000 },
+  { name: 'Round trip between regions', ns: 150_000_000 },
+]
+export const latencyLessons = [
+  'Memory is fast, disk is slow.',
+  'Avoid disk seeks when you can.',
+  'Compression is cheap: compress before sending over the network.',
+  'Crossing regions is expensive; keep chatty calls inside one data center.',
+]
+
+export const nines = [
+  { label: '99%', name: 'two nines', a: 0.99 },
+  { label: '99.9%', name: 'three nines', a: 0.999 },
+  { label: '99.99%', name: 'four nines', a: 0.9999 },
+  { label: '99.999%', name: 'five nines', a: 0.99999 },
+  { label: '99.9999%', name: 'six nines', a: 0.999999 },
+]
+
