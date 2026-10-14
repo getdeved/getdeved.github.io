@@ -121,3 +121,36 @@ export function parseNum(s: string): number | null {
   return Number(m[1]) * mult
 }
 
+export function fmt(n: number): string {
+  if (n >= 1e9) return `${+(n / 1e9).toPrecision(3)} billion`
+  if (n >= 1e6) return `${+(n / 1e6).toPrecision(3)} million`
+  return n.toLocaleString('en', { maximumFractionDigits: 2 })
+}
+
+export function fmtNs(ns: number): string {
+  if (ns < 1e3) return `${ns} ns`
+  if (ns < 1e6) return `${+(ns / 1e3).toPrecision(3)} µs`
+  if (ns < 1e9) return `${+(ns / 1e6).toPrecision(3)} ms`
+  return `${+(ns / 1e9).toPrecision(3)} s`
+}
+
+// If an L1 cache reference (0.5 ns) took one second, how long would this take?
+export function humanize(ns: number): string {
+  const s = ns / 0.5
+  const units: [number, string][] = [[365 * 86400, 'years'], [86400, 'days'], [3600, 'hours'], [60, 'minutes'], [1, 'seconds']]
+  const [size, name] = units.find(([u]) => s >= u) ?? units[4]
+  return `${+(s / size).toPrecision(2)} ${name}`
+}
+
+export function downtime(a: number): { year: string; month: string; day: string } {
+  const f = (sec: number) => {
+    if (sec >= 86400) return `${+(sec / 86400).toPrecision(3)} days`
+    if (sec >= 3600) return `${+(sec / 3600).toPrecision(3)} hours`
+    if (sec >= 60) return `${+(sec / 60).toPrecision(3)} minutes`
+    return `${+sec.toPrecision(3)} seconds`
+  }
+  const year = (1 - a) * 365 * 86400
+  return { year: f(year), month: f(year / 12), day: f(year / 365) }
+}
+
+export const within = (value: number, q: Q) => Math.abs(value - q.answer) / q.answer <= q.tol
