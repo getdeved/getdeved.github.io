@@ -110,3 +110,14 @@ export const problems: Problem[] = [
   },
 ]
 
+// ---- helpers ---------------------------------------------------------------------------
+
+// Accepts 3500, 3,500, 3.5k, 150M, 2b, 1t. Anything else (such as a trailing unit) is rejected so "30 TB"
+// cannot silently be read as 30 trillion.
+export function parseNum(s: string): number | null {
+  const m = s.trim().replace(/,/g, '').match(/^(-?\d*\.?\d+)\s*([kmbt])?$/i)
+  if (!m) return null
+  const mult = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 }[(m[2] ?? '').toLowerCase() as 'k'] ?? 1
+  return Number(m[1]) * mult
+}
+
