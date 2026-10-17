@@ -45,3 +45,26 @@ export default function Estimate() {
   }
   const restart = () => { setP(0); setS(0); setDone({}); setText(''); setTries(0); setMsg(null); setFinished(0) }
 
+  return (
+    <div className="mode">
+      <div className="build-grid guided">
+        <aside className="card docked">
+          {over ? (
+            <>
+              <p className="eyebrow">All problems done</p>
+              <h1>Nicely estimated</h1>
+              <p>You sized two systems from nothing but assumptions. The same four moves apply to any system: users, requests, bytes, bandwidth.</p>
+              <button className="run" onClick={restart}>Practise again</button>
+            </>
+          ) : (
+            <>
+              <p className="eyebrow">Problem {p + 1} of {problems.length}</p>
+              <h1>{problem.title}</h1>
+              <p>{problem.scenario}</p>
+              <h3>Assumptions</h3>
+              <ul className="assume">{problem.assumptions.map((a) => <li key={a}>{a}</li>)}</ul>
+              <p className="hint">Answer in the unit shown. Round freely: within about {Math.round(q.tol * 100)}% counts. You can type 3.5k, 150M, 2b.</p>
+            </>
+          )}
+        </aside>
+
