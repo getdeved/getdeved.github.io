@@ -19,3 +19,29 @@ export default function Estimate() {
   const over = finishedProblems >= problems.length
   const solved = msg?.kind === 'ok' || (!!q && !!done[q.id]?.how)
 
+  const check = () => {
+    const v = parseNum(text)
+    if (v === null) return setMsg({ kind: 'fail', text: `Enter just the number in ${q.unit}, for example 3500, 3.5k or 150M.` })
+    if (within(v, q)) {
+      setDone({ ...done, [q.id]: { value: v, how: false, first: tries === 0 } })
+      return setMsg({ kind: 'ok', text: 'Close enough. Estimates don’t need every digit.' })
+    }
+    const r = v / q.answer
+    const off = r > 1 ? `about ${r >= 10 ? Math.round(r) : +r.toFixed(1)}× too high` : `about ${1 / r >= 10 ? Math.round(1 / r) : +(1 / r).toFixed(1)}× too low`
+    setTries(tries + 1)
+    setMsg({ kind: 'fail', text: `Not quite, ${off}. ${q.hint}` })
+  }
+  const reveal = () => {
+    setDone({ ...done, [q.id]: { value: q.answer, how: true, first: false } })
+    setMsg({ kind: 'fail', text: `The answer is about ${fmt(q.answer)} ${q.unit}.` })
+  }
+  const next = () => {
+    setText(''); setTries(0); setMsg(null)
+    if (s + 1 < problem.steps.length) return setS(s + 1)
+    const f = finishedProblems + 1
+    setFinished(f)
+    try { localStorage.setItem(KEY, String(f)) } catch { /* progress just won't persist */ }
+    if (p + 1 < problems.length) { setP(p + 1); setS(0); setDone({}) } else setS(s + 1)
+  }
+  const restart = () => { setP(0); setS(0); setDone({}); setText(''); setTries(0); setMsg(null); setFinished(0) }
+
