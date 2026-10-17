@@ -68,3 +68,45 @@ export default function Estimate() {
           )}
         </aside>
 
+        <div className="build-main scroll">
+          {!over && (
+            <section className="stage sheet">
+              <h2>Estimation sheet</h2>
+              <ol>
+                {problem.steps.map((x, i) => {
+                  const d = done[x.id]
+                  const active = i === s
+                  return (
+                    <li key={x.id} className={`${d ? 'done' : ''} ${active ? 'active' : ''} ${active && msg ? msg.kind : ''}`}>
+                      <div className="row-head">
+                        {d ? <Check size={16} aria-label="Done" /> : <Circle size={14} aria-label={active ? 'Current' : 'Not yet'} />}
+                        <b>{x.label}</b>
+                        {d && <span className="val">{fmt(d.value)} <small>{x.unit}</small></span>}
+                      </div>
+                      {d && <p className="how">{x.how}</p>}
+                      {active && (
+                        <div className="ask">
+                          <p>{x.ask}</p>
+                          {!solved && (
+                            <form onSubmit={(e) => { e.preventDefault(); check() }}>
+                              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="your estimate" inputMode="decimal" aria-label={`${x.label} in ${x.unit}`} autoFocus />
+                              <span className="unit">{x.unit}</span>
+                              <button className="run" type="submit">Check</button>
+                              {tries >= 1 && <button type="button" onClick={reveal}>Show me</button>}
+                            </form>
+                          )}
+                          {msg && <p className={`outcome ${msg.kind}`} role="status">{msg.text}</p>}
+                          {solved && <button className="run" onClick={next}>{s + 1 < problem.steps.length ? 'Next step' : p + 1 < problems.length ? 'Next problem' : 'Finish'}</button>}
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ol>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
