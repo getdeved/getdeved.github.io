@@ -34,3 +34,29 @@ export const framework: Topic = topic('framework', 'A framework for system desig
       ],
       ['Prioritise by what is hardest or riskiest for this problem.', 'Name bottlenecks and propose fixes; do not over-engineer.'],
       'For a news feed design, identify the two or three most interesting deep-dive areas and the trade-offs in each (for example fan-out on write vs read).'),
+    step('wrap', 'Wrapping up',
+      'A few minutes are left. What is the best use of them?',
+      [
+        best('recap', 'Summarise the design, name bottlenecks and failure modes, and suggest next steps', 'Right. A short recap with honest limitations and ideas for scaling shows you see the whole system, not just the parts you drew.',
+          { add: [n('wrap', 'Wrap-up', 'clock', 5.6, 2, 'Step 4: recap decisions and trade-offs, discuss bottlenecks, error handling, monitoring and how it scales further.')], edges: ['deep>wrap'], d: { availability: 10 } }),
+        alt('done', 'Say “that’s it” and stop', 'wrong', 'You leave the best chance to show breadth unused: failures, monitoring, scale-up.'),
+        alt('redo', 'Start redesigning from scratch', 'wrong', 'Too late and it undermines the design you just defended.'),
+      ],
+      ['A typical 45-minute split: scope 3-10 min, high-level design 10-15, deep dive 10-25, wrap-up 3-5.', 'Do: ask, communicate, treat the interviewer as a teammate. Don’t: jump to solutions, go silent, over-engineer.'],
+      'Here is my design for a news feed. Act as a reviewer: summarise it in five bullets, list the biggest bottlenecks and failure modes, and suggest what to build next.'),
+  ],
+  ['Understand and scope first.', 'Agree on a high-level design before details.', 'Deep-dive where it matters.', 'Always wrap up with trade-offs and next steps.'])
+
+export const rateLimiter: Topic = topic('rate-limiter', 'Design a rate limiter',
+  'Stop one client from drowning everyone else, protect your costs, and keep servers upright, without turning away honest users.',
+  [
+    step('place', 'Where should the limiter live?',
+      'Your API gets abusive bursts from a few clients. You want to cap requests per client. Where do you enforce the limit?',
+      [
+        best('gateway', 'In middleware or an API gateway in front of the services', 'Right. One place that every request passes through, under your control, and independent of how many services sit behind it.',
+          { add: [n('u', 'Clients', 'users', 0, 2, 'Anyone calling the API: apps, scripts, and sometimes abusers.'), n('rl', 'Rate limiter', 'gauge', 2.5, 2, 'Middleware that counts requests per client and rejects the ones over the limit.'), n('api', 'API servers', 'server', 5, 2, 'The services doing the real work, protected from floods.')], edges: ['u>rl', 'rl>api'], d: { availability: 15, capacity: 10 } }),
+        alt('client', 'In the client app', 'wrong', 'Clients are not under your control. A malicious one just skips the check.'),
+        alt('each', 'Separately inside every service', 'ok', 'It works but duplicates logic and drifts apart. Shared enforcement is easier to keep consistent.'),
+      ],
+      ['Server-side or gateway enforcement is reliable; client-side is not.', 'Managed API gateways often include rate limiting plus authentication and TLS termination.'],
+      'Add a rate-limiting middleware to my API gateway that limits each API key to 100 requests per minute and returns a clear error when exceeded.'),
