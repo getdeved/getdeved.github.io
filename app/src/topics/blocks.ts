@@ -160,3 +160,37 @@ export const consistentHashing: Topic = topic('consistent-hashing', 'Consistent 
   ],
   ['Modulo hashing reshuffles almost everything when N changes.', 'A ring moves only the neighbouring slice.', 'Clockwise lookup is consistent for every client.', 'Virtual nodes even out the load.'])
 
+export const keyValue: Topic = topic('key-value', 'Design a key-value store',
+  'Build a store that survives machine failures and keeps answering, and learn the trade-offs hidden behind the letters CAP.',
+  [
+    step('partition', 'It no longer fits on one machine',
+      'Your single-server key-value store has run out of room. How do you split the data?',
+      [
+        best('hash', 'Partition keys across nodes with consistent hashing', 'Right. Data spreads evenly, and nodes can be added or removed with minimal data movement.',
+          { add: [n('c', 'Client', 'users', 0, 2, 'An application reading and writing keys via get(key) and put(key, value).'), n('co', 'Coordinator', 'lb', 1.9, 2, 'Any node can act as coordinator: it hashes the key and forwards the request to the right nodes.'), n('n1', 'Node A', 'db', 4, 0.5, 'A storage node that owns a slice of the key ring.'), n('n2', 'Node B', 'db', 4, 2, 'A storage node that owns a slice of the key ring.'), n('n3', 'Node C', 'db', 4, 3.5, 'A storage node that owns a slice of the key ring.')],
+            edges: ['c>co', 'co>n1', 'co>n2', 'co>n3'], d: { capacity: 20, complexity: 10 } }),
+        alt('mem', 'Keep hot data in memory and compress the rest', 'ok', 'Squeezes a single machine a bit further, but it still has a hard ceiling and one point of failure.'),
+        alt('up', 'Buy a bigger server', 'wrong', 'Vertical scaling hits a wall and offers no failover.'),
+      ],
+      ['Consistent hashing gives automatic scaling and heterogeneity (stronger machines can take more virtual nodes).'],
+      'Design a get/put API for a distributed key-value store partitioned with consistent hashing, and sketch how a coordinator routes a request.'),
+    step('replicate', 'A node dies and its data goes with it',
+      'Node B loses its disk. Everything it owned is gone. How do you keep data safe?',
+      [
+        best('rep', 'Replicate each key to N nodes, picking the next distinct servers on the ring', 'Right. With three copies on different servers (ideally in different data centers) one failure loses nothing.',
+          { add: [n('r2', 'Replica B2', 'replica', 5.8, 2, 'A copy of Node B’s data on a different server.')], edges: ['n2>>r2:replicate'], d: { availability: 25, complexity: 10 } }),
+        alt('backup', 'Take nightly snapshots', 'ok', 'Good as a backup, but a failure still means hours of downtime and lost recent writes.'),
+        alt('raid', 'Use more reliable disks', 'wrong', 'Disks are not the only thing that fails: machines, racks and whole sites do too.'),
+      ],
+      ['Choose replicas from distinct physical servers, not virtual nodes of the same machine.', 'Place replicas in different data centers when you can.'],
+      'Given a consistent hash ring with virtual nodes, write the function that picks N distinct physical servers for replication.'),
+    step('quorum', 'How strict should reads be?',
+      'You replicate to N=3 nodes. This store holds account balances that must never read stale. What quorum do you configure?',
+      [
+        best('quorum', 'Choose W and R so that W + R > N, for example W=2, R=2', 'Right. Any read quorum overlaps any write quorum in at least one node, so a read always sees the latest write.',
+          { d: { speed: -5, complexity: 5 } }),
+        alt('fast', 'W=1 and R=1 for speed', 'wrong', 'Fast, but a read can hit a replica that has not seen the write yet. That is eventual consistency, not what balances need.'),
+        alt('all', 'W=N so every write goes to all replicas', 'ok', 'Strongly consistent but one slow or dead replica blocks all writes.'),
+      ],
+      ['W=1, R=N: fast writes, slow reads. W=N, R=1: fast reads, slow writes.', 'Models: strong, weak, eventual consistency. Dynamo and Cassandra lean eventual; banks lean strong.'],
+      'Explain the W + R > N rule with a timeline diagram, and implement a toy quorum read/write over three in-memory replicas.'),
