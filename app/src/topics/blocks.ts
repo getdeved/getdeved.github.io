@@ -194,3 +194,28 @@ export const keyValue: Topic = topic('key-value', 'Design a key-value store',
       ],
       ['W=1, R=N: fast writes, slow reads. W=N, R=1: fast reads, slow writes.', 'Models: strong, weak, eventual consistency. Dynamo and Cassandra lean eventual; banks lean strong.'],
       'Explain the W + R > N rule with a timeline diagram, and implement a toy quorum read/write over three in-memory replicas.'),
+    step('conflict', 'Two clients write at once',
+      'Two clients update the same key on different replicas at the same moment. The replicas now disagree. How do you detect and handle it?',
+      [
+        best('vector', 'Version values with vector clocks and let the client reconcile conflicts', 'Right. A vector clock records which node saw which update, so you can tell “newer” apart from “concurrent”, and resolve concurrency deliberately.', { d: { complexity: 10 } }),
+        alt('lww', 'Keep whichever write has the later wall-clock time', 'ok', 'Simple, but clocks drift and silently throw away one of the updates.'),
+        alt('lock', 'Lock all replicas for every write', 'premature', 'Prevents conflicts but destroys availability and speed. It is the CP approach taken to an extreme.'),
+      ],
+      ['Version X is an ancestor of Y if all counters in X are less than or equal to those in Y. Otherwise they conflict.', 'Vector clocks grow, so real systems prune them.'],
+      'Implement vector clocks in TypeScript with compare() returning before, after or concurrent, and a small simulation of two replicas diverging.'),
+    step('failure', 'Detecting and surviving failures',
+      'A node stops responding. How do the others notice, and what do they do meanwhile?',
+      [
+        best('gossip', 'Gossip heartbeats to detect failure; hinted handoff covers short outages', 'Right. Nodes periodically exchange heartbeat counters with random peers, so failure is detected without a central point. Healthy nodes hold writes for a downed one and hand them back when it returns.',
+          { add: [n('g', 'Gossip', 'radio', 5.5, 4.4, 'Nodes swap membership and heartbeat info with random peers. A node silent for too long is marked down.')], edges: ['n1>>g', 'n3>>g'], d: { availability: 15, complexity: 10 } }),
+        alt('monitor', 'One monitor node checks everybody', 'ok', 'Simple, but it is a single point of failure and does not scale with the cluster.'),
+        alt('client', 'Wait until clients report errors', 'wrong', 'You learn about failures only from user pain.'),
+      ],
+      ['Temporary failures: sloppy quorum plus hinted handoff.', 'Permanent failures: repair replicas with Merkle trees that compare hashes and sync only the differing buckets.', 'Cross-data-center replication handles whole-site outages.'],
+      'Describe a gossip-based failure detector and write a simulation where nodes mark each other as down after missing heartbeats.'),
+  ],
+  ['Partition with consistent hashing.', 'Replicate to survive failures.', 'W + R > N gives strong consistency; relaxing it buys speed and availability.', 'Vector clocks expose conflicts.', 'Gossip detects failures without a boss.'])
+
+export const uniqueId: Topic = topic('unique-id', 'Design a unique ID generator',
+  'Hand out IDs that never collide, across many servers, quickly, and ideally in time order.',
+  [
