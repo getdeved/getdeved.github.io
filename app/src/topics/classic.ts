@@ -96,3 +96,28 @@ export const webCrawler: Topic = topic('web-crawler', 'Design a web crawler',
   ],
   ['Use a frontier as the core queue.', 'Politeness: one queue and delay per host.', 'Dedupe URLs and content.', 'Distribute work and persist state.'])
 
+export const notifications: Topic = topic('notifications', 'Design a notification system',
+  'Send push, SMS and email notifications to millions of users, quickly, once, and only if they want them.',
+  [
+    step('providers', 'How do notifications actually leave?',
+      'You need push (iOS, Android), SMS and email. Do you write the delivery plumbing yourself?',
+      [
+        best('third', 'Hand delivery to each channel’s provider: APNs, FCM, an SMS gateway, an email service', 'Right. Each channel has its own network of providers. You build the system that decides what to send; they deliver it.',
+          { add: [n('svc', 'Services', 'server', 0, 2, 'Services such as billing or shipping that trigger notifications.'), n('ns', 'Notification server', 'bell', 2, 2, 'Receives requests, validates them, and prepares notifications.'), n('p', 'Push (APNs, FCM)', 'phone', 4.3, 0.5, 'Apple and Google services that deliver push messages to devices.'), n('s', 'SMS gateway', 'chat', 4.3, 2, 'Third-party service that sends text messages.'), n('m', 'Email service', 'mail', 4.3, 3.5, 'Commercial service that sends and tracks email.')],
+            edges: ['svc>ns', 'ns>p', 'ns>s', 'ns>m'], d: { capacity: 10, complexity: 5 } }),
+        alt('own', 'Run your own push, SMS and email infrastructure', 'wrong', 'Reaching phones and inboxes needs relationships, reputation and licences. Use the providers.'),
+        alt('one', 'Support only one channel', 'ok', 'Simplest, but the requirement is all three.'),
+      ],
+      ['You also need contact info: device tokens for push, phone and email addresses on the user record.'],
+      'Design the data model for storing a user’s email, phone number and multiple device tokens, with opt-in flags per channel.'),
+    step('spof', 'One notification server is a bottleneck',
+      'All traffic flows through a single server. If it dies, notifications stop, and the database and cache cannot scale on their own. What changes?',
+      [
+        best('mq', 'Put queues between the notification servers and per-channel workers, and scale each part separately', 'Right. Queues decouple intake from delivery: servers add messages, workers per channel send them at their own pace, and each part scales independently.',
+          { add: [n('qp', 'Push queue', 'queue', 3.2, 0.5, 'Holds push notifications waiting for workers.'), n('qs', 'SMS queue', 'queue', 3.2, 2, 'Holds SMS notifications waiting for workers.'), n('qm', 'Email queue', 'queue', 3.2, 3.5, 'Holds email notifications waiting for workers.')],
+            cut: ['ns>p', 'ns>s', 'ns>m'], edges: ['ns>qp', 'ns>qs', 'ns>qm', 'qp>p', 'qs>s', 'qm>m'], d: { capacity: 20, availability: 20, complexity: 10 } }),
+        alt('bigger', 'Run the notification server on a bigger machine', 'ok', 'Delays the problem, but it is still a single point of failure.'),
+        alt('retry', 'Make callers retry when it is down', 'wrong', 'Pushes the failure upstream and loses notifications during outages.'),
+      ],
+      ['One queue per notification type means a slow provider (say SMS) does not delay the others.'],
+      'Add per-channel queues and worker processes for push, SMS and email, with worker concurrency configurable per channel.'),
