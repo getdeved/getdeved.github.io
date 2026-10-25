@@ -190,3 +190,26 @@ export const newsFeed: Topic = topic('news-feed', 'Design a news feed',
   ],
   ['Publishing and feed building are separate flows.', 'Hybrid fan-out handles celebrities.', 'Cache feed IDs; hydrate from other caches.', 'Replicate, shard and keep servers stateless.'])
 
+export const chat: Topic = topic('chat', 'Design a chat system',
+  'Deliver messages in real time between two people or a group, show who is online, and work across devices.',
+  [
+    step('proto', 'How does the receiver get the message?',
+      'Alice sends a message to Bob. Sending over HTTP is fine, but how does Bob’s device receive it right away?',
+      [
+        best('ws', 'A persistent WebSocket connection to the chat server', 'Right. A WebSocket is a long-lived, two-way channel, so the server can push messages the instant they arrive. Senders and receivers can use the same connection.',
+          { add: [n('a', 'Alice', 'phone', 0, 1, 'The sender’s device.'), n('b', 'Bob', 'phone', 5.7, 1, 'The receiver’s device, holding a WebSocket to a chat server.'), n('c1', 'Chat server 1', 'chat', 2, 1, 'Stateful server that holds WebSocket connections for its users.'), n('c2', 'Chat server 2', 'chat', 3.8, 1, 'Another chat server, holding other users’ connections.')], edges: ['a>c1:send', 'c1>c2:route', 'c2>b:push'], d: { speed: 25, capacity: 10, complexity: 10 } }),
+        alt('poll', 'Bob’s app asks the server for new messages every few seconds', 'ok', 'Simple, but most polls return nothing and messages arrive late.'),
+        alt('long', 'Long polling', 'ok', 'Better than polling, but still reconnects often, the server cannot tell if a client is gone, and it is inefficient for busy chats.'),
+      ],
+      ['Chat servers are stateful because they hold persistent connections; most other services (login, profile, groups) can stay stateless behind a load balancer.'],
+      'Build a minimal chat server with WebSockets that relays a message from one user to another, with a reconnect strategy.'),
+    step('route', 'Finding the right server',
+      'Bob is connected to a different chat server than Alice. How does the message get there?',
+      [
+        best('sd', 'Use service discovery and a message queue per user (or a sync queue)', 'Right. Service discovery assigns the best server for a client to connect to and tracks which server holds each user. Messages go to the recipient’s queue, so they are delivered even if Bob is briefly offline.',
+          { add: [n('sd', 'Service discovery', 'dns', 1, 3.2, 'Tells clients which chat server to connect to, and where each user is connected.'), n('mq', 'Message sync queue', 'queue', 2.9, 3.2, 'Per-recipient queue that holds messages until the client confirms receipt.')], edges: ['a>>sd', 'c1>mq', 'mq>c2'], d: { availability: 20, complexity: 10 } }),
+        alt('all', 'Broadcast every message to all chat servers', 'wrong', 'Does not scale: every server processes every message.'),
+        alt('same', 'Force all users onto one server', 'wrong', 'A single server caps scale and is a single point of failure.'),
+      ],
+      ['ID generation: message IDs must be sortable by time within a chat. Local sequence numbers per channel are enough; global IDs are not required.'],
+      'Design the flow of a one-to-one message across two chat servers, including service discovery, queues and acknowledgements.'),
