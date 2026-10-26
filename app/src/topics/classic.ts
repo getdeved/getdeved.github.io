@@ -282,3 +282,36 @@ export const autocomplete: Topic = topic('autocomplete', 'Design search autocomp
   ],
   ['A trie answers prefix queries quickly.', 'Rebuild offline instead of updating live.', 'Cache and shard to survive the peak.'])
 
+export const youtube: Topic = topic('youtube', 'Design YouTube',
+  'Upload a video once, play it smoothly on a phone, a laptop and a TV, without a ruinous bandwidth bill.',
+  [
+    step('upload', 'Uploading a video',
+      'A user uploads a 300 MB video. Where do the file and its metadata go?',
+      [
+        best('split', 'The file goes to blob storage; title and description go to a metadata database', 'Right. Big binary files belong in cheap, scalable object storage. Small structured details go to a database that can be queried.',
+          { add: [n('u', 'Creator', 'users', 0, 2, 'Uploads videos from a phone or computer.'), n('api', 'API servers', 'server', 1.9, 2, 'Handle everything except streaming: uploads, metadata, feeds.'), n('os', 'Original storage', 'boxes', 3.8, 3.5, 'Blob storage for the raw uploaded video.'), n('md', 'Metadata DB', 'db', 3.8, 0.5, 'Title, description, size, owner and status of each video.')], edges: ['u>api', 'api>os:file', 'api>md:metadata'], d: { capacity: 15, complexity: 10 } }),
+        alt('db', 'Store the video file in the database', 'wrong', 'Databases are the wrong tool for huge binaries.'),
+        alt('disk', 'Save to disks on the API servers', 'wrong', 'Not durable, not shared, and impossible to scale.'),
+      ],
+      ['Large uploads can be split into chunks and resumed after a failure.'],
+      'Implement resumable chunked uploads to blob storage using pre-signed URLs, storing metadata after the upload completes.'),
+    step('transcode', 'Raw video is not playable everywhere',
+      'Videos arrive in many formats and sizes. Viewers have different devices and network speeds. What do you do after upload?',
+      [
+        best('trans', 'Transcode into several resolutions and formats, in parallel as a pipeline', 'Right. Each video is converted into multiple bitrates and formats, so players can pick what suits the device and connection. A DAG of tasks (split, encode, thumbnail, watermark) runs in parallel on workers.',
+          { add: [n('tr', 'Transcoding workers', 'film', 2.8, 4.7, 'Convert the original into many resolutions and formats, in parallel on many machines.'), n('ts', 'Transcoded storage', 'boxes', 5.2, 3.5, 'Blob storage for the encoded versions.')], edges: ['os>tr', 'tr>ts'], d: { speed: 15, capacity: 15, complexity: 20 } }),
+        alt('orig', 'Serve the original file to everyone', 'wrong', 'Huge, wrong format for many devices, and stalls on slow networks.'),
+        alt('one', 'Transcode to a single mid-quality version', 'ok', 'Simple, but a one-size-fits-all video is wasteful on fast links and unwatchable on slow ones.'),
+      ],
+      ['Container (MP4, MKV) wraps video, audio and metadata; codec (H.264, VP9) compresses it.', 'Split videos into small chunks aligned to groups of pictures so each can be processed independently, with a DAG scheduler, resource manager and task workers.'],
+      'Sketch a transcoding pipeline as a DAG: split into segments, encode each at several bitrates in parallel, then merge manifests.'),
+    step('stream', 'Streaming without melting the bill',
+      'Millions of people watch. Serving every stream from your data center is slow and costly. How do you stream?',
+      [
+        best('cdn', 'Serve videos from a CDN near the viewer, using adaptive streaming', 'Right. Popular videos are cached close to users, cutting latency and long-haul bandwidth, and adaptive streaming switches quality as the network changes. Rarely watched videos can come from your own storage.',
+          { add: [n('cdn', 'CDN', 'cdn', 5.7, 1.4, 'Edge servers near viewers that cache and stream popular videos.'), n('v', 'Viewers', 'users', 5.7, 0, 'Watch on phones, laptops and TVs.')], edges: ['ts>cdn', 'cdn>v:stream'], d: { speed: 25, capacity: 20, complexity: 10 } }),
+        alt('dc', 'Stream everything from your own data center', 'wrong', 'Distance adds latency, and bandwidth costs balloon.'),
+        alt('dl', 'Make viewers download the whole video first', 'wrong', 'Unacceptable wait, and wasteful if they stop watching.'),
+      ],
+      ['CDN costs are real: cache only the popular videos and serve the long tail from regional storage. Protocols include MPEG-DASH and HLS.'],
+      'Generate an HLS manifest with three bitrates for a video, and configure a CDN to cache segments with proper headers.'),
