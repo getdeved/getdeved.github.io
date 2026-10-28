@@ -81,3 +81,29 @@ export const nearbyFriends: Topic = topic('nearby-friends', 'Design nearby frien
       ],
       ['Users with many friends: only send to those who are online and within range; consider limits such as a friends cap.', 'Pub/sub servers can be sharded with consistent hashing; Erlang-like actor systems are an alternative.'],
       'Implement per-user pub/sub channels and show how a WebSocket server subscribes to friends’ channels at connect time.'),
+    step('range', 'Only nearby friends, not all friends',
+      'A friend 500 km away should not appear. Where does the distance check happen?',
+      [
+        best('filter', 'On the receiving server: compute the distance and forward only if within the radius', 'Right. Each update is cheap to check on the receiving side, so only friends within range are shown. A friend’s location is also fetched from the cache on first connect.',
+          { d: { speed: 5, complexity: 5 } }),
+        alt('all', 'Send everything to the phone and let the app filter', 'ok', 'Wastes mobile data and battery.'),
+        alt('geo', 'Index all users in a global geohash database and query it', 'ok', 'A valid design for “nearby strangers”, but unnecessary for friends: the friend list is small.'),
+      ],
+      ['Nearby random persons: use geohash-keyed pub/sub channels instead.'],
+      'On receiving a friend’s location update, compute haversine distance and push to the client only if it is within 5 miles.'),
+  ],
+  ['WebSockets deliver live updates.', 'A cache with TTL holds the latest position.', 'Per-user pub/sub fans updates out.', 'Filter by distance on receive.'])
+
+export const maps: Topic = topic('maps', 'Design Google Maps',
+  'Draw a map, find a route and keep an ETA fresh, on a phone with a weak connection.',
+  [
+    step('tiles', 'Drawing the map',
+      'The world map is far too large to send. How does the phone show just the part you are looking at?',
+      [
+        best('tiles', 'Pre-render map tiles at each zoom level and serve them from a CDN', 'Right. The world is cut into small image tiles per zoom level. The client asks for the tiles covering its viewport; a CDN caches them close to users. Little work happens per request.',
+          { add: [n('u', 'Phone', 'phone', 0, 2, 'Requests the tiles that cover its viewport at the current zoom level.'), n('cdn', 'CDN', 'cdn', 2, 2, 'Serves pre-rendered map tiles from the edge.'), n('ts', 'Tile storage', 'boxes', 4, 2, 'Object storage holding pre-rendered tiles for every zoom level.')], edges: ['u>cdn:tile URLs', 'cdn>ts'], d: { speed: 30, capacity: 20, complexity: 10 } }),
+        alt('server', 'Render the map on a server for every request', 'wrong', 'Heavy compute per request and no benefit from caching.'),
+        alt('whole', 'Ship the whole map to the phone', 'wrong', 'Far too much data for mobile.'),
+      ],
+      ['Different zoom levels have different tile sets. Vector tiles send shapes instead of images and use less bandwidth, with client-side rendering.'],
+      'Compute the tile x, y, z for a given latitude, longitude and zoom, and the URL scheme for fetching it.'),
