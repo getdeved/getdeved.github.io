@@ -34,3 +34,29 @@ export const metrics: Topic = topic('metrics', 'Metrics monitoring and alerting'
       ],
       ['Use a purpose-built time-series database (such as InfluxDB or Prometheus). Compress with delta encoding, since consecutive values are similar.'],
       'Design retention tiers: 1-second data for 7 days, 1-minute for 30 days, 1-hour for a year, and the downsampling job.'),
+    step('alert', 'Waking someone up, sensibly',
+      'A rule fires: CPU > 90% for five minutes. Who is notified, and how do you avoid pager storms?',
+      [
+        best('alert', 'An alert manager evaluates rules, deduplicates and groups alerts, and routes to email, pager or chat', 'Right. Rules run on a schedule against the query service; the manager groups related alerts, suppresses duplicates, and sends them to the right channel.',
+          { add: [n('am', 'Alert manager', 'bell', 5.2, 3.6, 'Evaluates rules, deduplicates and groups alerts, and routes them to destinations.'), n('pg', 'Pager, email, chat', 'send', 5.7, 4.8, 'Where notifications go: whoever is on call.')], edges: ['am>q:rules', 'am>pg'], d: { availability: 20, complexity: 10 } }),
+        alt('every', 'Page on every single threshold breach', 'wrong', 'Alert fatigue: people start ignoring pages.'),
+        alt('dash', 'Watch the dashboard instead', 'wrong', 'Nobody watches a dashboard at 3am.'),
+      ],
+      ['Alert on symptoms users feel, not every cause. Reliability matters most here: this system cannot go quiet when things break.'],
+      'Write an alert rule for p99 latency > 500ms for 5 minutes, with grouping and a routing rule for the on-call channel.'),
+  ],
+  ['Collect with discovery; buffer with a queue.', 'Use a time-series database and downsample.', 'Alert on what matters and group the noise.'])
+
+export const adClicks: Topic = topic('ad-clicks', 'Ad click event aggregation',
+  'Count billions of ad clicks per day exactly, in near real time, because money depends on the answer.',
+  [
+    step('ingest', 'A flood of click events',
+      'Hundreds of thousands of clicks arrive per second. You need aggregated counts per ad per minute. What is the first thing between the log files and the database?',
+      [
+        best('queue', 'A message queue, so ingestion and aggregation scale separately', 'Right. The queue buffers bursts, lets you replay events after a failure, and decouples producers from the aggregator.',
+          { add: [n('ls', 'Log watcher', 'log', 0, 2, 'Reads click events from application servers.'), n('mq', 'Message queue', 'queue', 1.9, 2, 'Durable stream of raw click events.'), n('ag', 'Aggregation service', 'chart', 3.8, 2, 'Counts clicks per ad per time window.'), n('db', 'Aggregated DB', 'db', 5.6, 2, 'Stores per-minute counts for queries.')], edges: ['ls>mq', 'mq>ag', 'ag>db'], d: { capacity: 20, availability: 10, complexity: 10 } }),
+        alt('dbw', 'Write every raw click directly into the database', 'wrong', 'The write rate overwhelms a database and no aggregation happens.'),
+        alt('mem', 'Aggregate only in memory on the app servers', 'wrong', 'A crash loses counts, and the numbers are never combined across servers.'),
+      ],
+      ['Raw data is kept in a cold store (such as object storage) for reprocessing and audits; aggregated data answers queries.'],
+      'Define a click event schema (ad_id, click_timestamp, user_id, ip, country) and write a producer that publishes events to Kafka.'),
