@@ -127,3 +127,29 @@ export const objectStorage: Topic = topic('object-storage', 'Design S3-like obje
       ],
       ['Versioning keeps multiple variants of an object. Listing objects requires an index of metadata sharded by bucket and key.'],
       'Implement multipart upload against a storage API: initiate, upload parts concurrently with retries, and complete.'),
+    step('gc', 'Cleaning up',
+      'Deleted objects, abandoned partial uploads and corrupted copies all leave garbage. How do you reclaim space without risk?',
+      [
+        best('gc', 'Mark deleted lazily, and run background garbage collection with compaction', 'Right. A deleted object is first only marked, so it can be recovered and deletion is fast. A background process later removes orphaned parts and bad data, compacting files to reclaim space.',
+          { d: { capacity: 5, complexity: 10 } }),
+        alt('now', 'Delete bytes immediately on every request', 'ok', 'Simple, but slow, and impossible to undo after a mistake.'),
+        alt('never', 'Never delete', 'wrong', 'Costs grow forever.'),
+      ],
+      ['Orphan data, lazy deletion and corrupted data are the three garbage sources.'],
+      'Write a background GC that scans for upload parts with no completed object older than 7 days and deletes them safely.'),
+  ],
+  ['Split metadata from data.', 'Erasure coding and replication give durability.', 'Multipart uploads for big files.', 'Lazy deletion plus garbage collection.'])
+
+export const leaderboard: Topic = topic('leaderboard', 'Real-time gaming leaderboard',
+  'Rank millions of players by score, show the top ten instantly, and tell any player where they stand.',
+  [
+    step('design', 'Ranking in SQL does not hold up',
+      'Players win games and scores change constantly. A SQL query ORDER BY score DESC LIMIT 10 over millions of rows is slow, and finding one player’s rank means scanning. What do you use?',
+      [
+        best('zset', 'A Redis sorted set: members ordered by score', 'Right. Sorted sets keep members ordered as scores change (ZADD, ZINCRBY), return the top N (ZREVRANGE) and a player’s rank (ZREVRANK) in logarithmic time. They are built on a skip list.',
+          { add: [n('g', 'Game servers', 'server', 0, 2, 'Verify that a game was won and award points.'), n('ls', 'Leaderboard service', 'trophy', 2.2, 2, 'Updates scores and answers top-N and rank queries.'), n('r', 'Redis sorted set', 'cache', 4.4, 2, 'Holds all players ordered by score for this month.'), n('db', 'Score database', 'db', 4.4, 3.7, 'Durable record of every score change.')], edges: ['g>ls:score +1', 'ls>r:ZINCRBY', 'ls>db'], d: { speed: 30, capacity: 20, complexity: 10 } }),
+        alt('sql', 'A SQL table with an index on score', 'ok', 'Fine for thousands of players; finding rank or the top N across millions under constant updates does not scale.'),
+        alt('sort', 'Sort all scores in the app on every request', 'wrong', 'Far too slow.'),
+      ],
+      ['Never let the client set its own score; the game server must verify the win.', 'Skip list gives O(log n) insert and rank.'],
+      'Use Redis ZINCRBY to add points, ZREVRANGE to read the top 10 with scores, and ZREVRANK to get a player’s position.'),
