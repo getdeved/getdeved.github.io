@@ -59,3 +59,34 @@ export const extras1: Extras = {
         alt('swap', 'Bucket size is the average rate; refill rate is the burst', 'wrong', 'The other way around.'),
         alt('one', 'Only one number matters', 'wrong', 'You need both to describe burst and average.'),
       ], ['Different endpoints often get different buckets, and sometimes buckets per user or per IP.'], 'For a token bucket allowing 5 requests/second with bursts of 20, what are the bucket size and refill rate, and what happens after 30 requests in one second?'),
+      step('fixedwin', 'Why fixed windows leak', 'A fixed-window counter allows 5 requests per minute. A client sends 5 at 0:59 and 5 at 1:01. What happened?', [
+        best('burst', 'Ten requests passed in two seconds: bursts across a window edge double the rate', 'Right. That is the known weakness of fixed windows, and why sliding windows exist.'),
+        alt('fine', 'Nothing wrong: each window allowed 5', 'wrong', 'Each window is fine, but the real rate over those two seconds is double the limit.'),
+        alt('block', 'The second batch is blocked', 'wrong', 'It is in a new window, so it is allowed.'),
+      ], ['Sliding window log fixes it exactly (memory heavy); sliding window counter fixes it approximately (memory light).'], 'Simulate a fixed-window limiter and a sliding-window counter against a burst at the window boundary and compare the results.'),
+    ],
+    store: [
+      step('ttl', 'Counters must forget', 'Redis holds a counter per client per window. What stops them piling up forever?', [
+        best('expire', 'Give every counter key an expiry', 'Right. Keys vanish when their window is over, so memory stays bounded without a cleanup job.'),
+        alt('manual', 'Run a nightly cleanup script', 'ok', 'Works, but memory grows all day and the script is more to maintain.'),
+        alt('never', 'Keep them for audit', 'wrong', 'Counters are not an audit log, and memory is finite.'),
+      ], ['INCR plus EXPIRE is the classic pair, but see the race condition in the next steps.'], 'Show how to set a counter key with a 60 second expiry in Redis atomically, so the key is never created without a TTL.'),
+    ],
+    race: [
+      step('multi', 'Many limiter instances', 'You run several gateways, each with its own limiter. A client’s requests spread across them. How do they share counts?', [
+        best('shared', 'All instances use the same central counter store', 'Right. One shared source of truth means the client’s total is counted regardless of which gateway it hit.', { add: [n('rl2', 'Rate limiter B', 'gauge', 2.5, 3.4, 'A second limiter instance. It reads and writes the same Redis counters as the first.')], edges: ['u>rl2', 'rl2>api', 'rl2>r'] }),
+        alt('local', 'Each instance keeps its own counts', 'wrong', 'A client can use the full limit on every instance.'),
+        alt('sync', 'Instances broadcast counts to each other', 'ok', 'Possible but chatty and eventually consistent.'),
+      ], ['Another option: sticky routing so one client always hits the same limiter.'], 'Explain two ways to keep rate-limit counts consistent across multiple gateway instances and their trade-offs.'),
+    ],
+    reply: [
+      step('monitor', 'Are the rules right?', 'The limiter is live. How do you know whether limits are too strict or too loose?', [
+        best('watch', 'Monitor allowed versus blocked requests and tune the rules', 'Right. Too many blocked good users means the rules are too strict; abuse getting through means too loose.', { add: [n('mon', 'Monitoring', 'chart', 5, 0.5, 'Dashboards of allowed and blocked requests per rule.')], edges: ['rl>>mon:metrics'] }),
+        alt('set', 'Set limits once and forget them', 'wrong', 'Traffic patterns change.'),
+        alt('guess', 'Wait for angry emails', 'wrong', 'You find out too late, and only about one failure mode.'),
+      ], ['Track blocked rate per rule and per client.'], 'Add allowed/blocked counters per rule to my rate limiter and a dashboard query showing the blocked ratio.'),
+    ],
+  },
+
+  'consistent-hashing': {
+    rehash: [
