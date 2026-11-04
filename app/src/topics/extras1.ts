@@ -154,3 +154,37 @@ export const extras1: Extras = {
       ], ['Dynamo and Cassandra favour eventual consistency; configurable quorums let you tune it.'], 'Describe a timeline where an eventually consistent read returns stale data and when it finally converges.'),
     ],
     conflict: [
+      step('resolve', 'Resolving a conflict', 'Vector clocks say two versions are concurrent. Now what?', [
+        best('client', 'Return both versions and let the client (or an app rule) merge them', 'Right. Only the application knows how to merge, for example by taking a union of shopping cart items.'),
+        alt('pick', 'Silently keep one', 'ok', 'Simple, but data from the other version is lost.'),
+        alt('error', 'Reject both writes', 'wrong', 'Users lose their work.'),
+      ], ['Vector clocks can grow large; real systems cap or prune them.'], 'Implement a shopping cart merge for two conflicting versions as a set union with removal markers.'),
+    ],
+    failure: [
+      step('permanent', 'A replica is gone for good', 'A node’s disk is destroyed. Its replacement is empty. How do you repair it efficiently?', [
+        best('merkle', 'Compare Merkle-tree hashes with other replicas and copy only what differs', 'Right. Matching hashes mean matching data, so only the differing buckets are transferred.'),
+        alt('copy', 'Copy the whole dataset from a peer', 'ok', 'Works but moves far more data than needed.'),
+        alt('ignore', 'Leave it empty and fill on demand', 'wrong', 'Durability suffers until every key is read.'),
+      ], ['A Merkle tree hashes leaf buckets, then hashes of hashes up to a root.'], 'Build a small Merkle tree over key buckets and a function that finds the buckets that differ between two replicas.'),
+      step('dc', 'A whole data center disappears', 'Replicas are in one site. A power cut takes the site down. What do you need?', [
+        best('multi', 'Replicate across data centers', 'Right. Copies in separate sites mean a site loss is a failover, not data loss.', { add: [n('dc2', 'Second data center', 'dc', 5.8, 0.7, 'Another site holding replicas of the data.')], edges: ['n1>>dc2:replicate'], d: { availability: 15 } }),
+        alt('backup', 'Backups in the same building', 'wrong', 'The same fire takes both.'),
+        alt('none', 'Accept the risk', 'wrong', 'A whole-site loss is rare, but data loss is permanent.'),
+      ], ['Cross-data-center replication can be asynchronous to keep latency low.'], 'Place replicas for a key across three data centers and describe what happens when one is lost.'),
+    ],
+  },
+
+  'unique-id': {
+    why: [
+      step('req', 'What must the IDs be?', 'Before choosing a design, you pin down the requirements. Which are essential here?', [
+        best('reqs', 'Unique, numeric, 64-bit, sortable by time, and 10,000+ per second', 'Right. Each requirement rules out options: numeric and 64-bit exclude UUIDs; time-sortable and scale shape the rest.'),
+        alt('any', 'Anything unique will do', 'wrong', 'Size, sorting and throughput decide which designs are viable.'),
+        alt('text', 'Long human-readable strings', 'wrong', 'IDs are used as database keys; compact numbers index better.'),
+      ], ['Ask first: what is the ID format and length, must they increase with time, and how many per second?'], 'Write the requirements for a distributed ID generator and a table scoring UUID, ticket server and Snowflake against them.'),
+    ],
+    bits: [
+      step('timestamp', 'Why a timestamp up front?', 'The timestamp occupies the highest bits. Why there?', [
+        best('sort', 'Higher bits dominate the numeric value, so IDs sort roughly by creation time', 'Right. Putting time first makes later IDs larger, so databases can order by ID.'),
+        alt('rand', 'To make IDs look random', 'wrong', 'The opposite: they are ordered.'),
+        alt('size', 'Because it is the largest field', 'wrong', 'Position, not size, gives the ordering.'),
+      ], ['41 bits of milliseconds is about 69 years from a custom epoch.'], 'Compute how long 41 bits of millisecond timestamps last, and how to pick an epoch.'),
