@@ -123,3 +123,34 @@ export const extras1: Extras = {
         alt('inf', 'As many as possible, without limit', 'wrong', 'Memory and lookup cost grow with every virtual node.'),
         alt('one', 'One per server is enough', 'wrong', 'That is the uneven basic ring.'),
       ], ['Standard deviation of load shrinks as virtual nodes increase.'], 'Measure the standard deviation of keys per server for 1, 10, 100 and 1000 virtual nodes per server.'),
+      step('hotkey', 'One key is on fire', 'Even with a perfectly balanced ring, one celebrity key gets a million reads a second. Does the ring help?', [
+        best('no', 'No: the ring balances keys, not their traffic. Replicate or split the hot key', 'Right. Hot keys need their own treatment: replicas, local caching, or splitting the key.'),
+        alt('yes', 'Yes, virtual nodes solve all imbalance', 'wrong', 'They balance key counts, not per-key traffic.'),
+        alt('ignore', 'Ignore it', 'wrong', 'That server melts.'),
+      ], ['Real systems using rings: DynamoDB, Cassandra, Discord, Akamai CDN, Maglev.'], 'Design a hot-key mitigation for a cache cluster using consistent hashing: detect, replicate, and route reads.'),
+    ],
+  },
+
+  'key-value': {
+    partition: [
+      step('api', 'What does the store offer?', 'A key-value store is deliberately simple. What is the core API?', [
+        best('getput', 'put(key, value) and get(key), with small values', 'Right. A tiny surface lets the system focus on scale and speed. Values are small (typically under 10 KB).'),
+        alt('sql', 'Full SQL with joins', 'wrong', 'That is a different kind of database.'),
+        alt('files', 'Store large files as values', 'wrong', 'Big blobs belong in object storage.'),
+      ], ['Single-server version: a hash table in memory, with compression or disk tiers to stretch it.'], 'Define the get/put/delete API and size limits for a key-value store, and a single-node hash-table implementation.'),
+    ],
+    replicate: [
+      step('cap', 'Choosing in a network split', 'A network failure splits the cluster in two. Both halves are alive. What must you choose between?', [
+        best('cp-ap', 'Consistency or availability: refuse some requests, or answer with possibly stale data', 'Right. That is the CAP theorem: with a partition, you cannot have both. Banks lean to consistency; many web systems to availability.', { d: { availability: 5 } }),
+        alt('both', 'You can keep both with enough replicas', 'wrong', 'Replicas do not change the theorem: during a partition one side cannot know the other’s writes.'),
+        alt('drop', 'Pick partition tolerance off', 'wrong', 'Networks do partition, so real systems must tolerate it.'),
+      ], ['CP: consistent but may be unavailable. AP: available but may be inconsistent.'], 'Explain CAP with an example of a write during a partition, and what a CP versus an AP system would do.'),
+    ],
+    quorum: [
+      step('models', 'Consistency models', 'What do “strong”, “weak” and “eventual” consistency mean for a read?', [
+        best('defs', 'Strong: latest write always. Weak: may be stale. Eventual: stale for a while, then converges', 'Right. Stronger guarantees cost latency and availability.'),
+        alt('same', 'They are different names for the same thing', 'wrong', 'They are different guarantees with different costs.'),
+        alt('eventual', 'Eventual means data may be lost', 'wrong', 'It converges; it just may disagree for a while.'),
+      ], ['Dynamo and Cassandra favour eventual consistency; configurable quorums let you tune it.'], 'Describe a timeline where an eventually consistent read returns stale data and when it finally converges.'),
+    ],
+    conflict: [
