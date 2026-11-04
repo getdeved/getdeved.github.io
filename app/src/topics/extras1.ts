@@ -90,3 +90,36 @@ export const extras1: Extras = {
 
   'consistent-hashing': {
     rehash: [
+      step('space', 'How big is the ring?', 'You place servers and keys on a ring. How large should the hash space be?', [
+        best('big', 'A huge fixed circle, such as 0 to 2^160-1 with SHA-1', 'Right. A vast space makes collisions between positions vanishingly rare, and the ring never changes size when servers come and go.'),
+        alt('small', 'Exactly as many positions as servers', 'wrong', 'Then adding a server means resizing the ring: the modulo problem again.'),
+        alt('grow', 'A ring that grows with the cluster', 'wrong', 'Changing the space moves keys, defeating the point.'),
+      ], ['Both servers and keys use the same hash function.'], 'Hash server names and 10 sample keys onto a 2^32 ring with a hash function and print their positions in order.'),
+    ],
+    lookup: [
+      step('fast', 'Looking it up quickly', 'A lookup must find the first server clockwise from a key. How do you do it fast with thousands of virtual nodes?', [
+        best('sorted', 'Keep positions in a sorted structure and binary-search for the next one', 'Right. A sorted array or tree finds the successor in logarithmic time.'),
+        alt('scan', 'Scan every server position on each lookup', 'ok', 'Correct but linear, which hurts with many virtual nodes.'),
+        alt('rehash', 'Re-hash the key until it lands on a server', 'wrong', 'Not how a ring works, and not deterministic.'),
+      ], ['Wrap around: past the last position, go to the first.'], 'Implement ring lookup with binary search including wrap-around from the largest position to the smallest.'),
+    ],
+    add: [
+      step('migrate', 'Moving the keys safely', 'Server 4 joins and must take over a key range. How do you move data without losing reads?', [
+        best('copy', 'Copy the range to the new server, then switch routing, then clean up the old copy', 'Right. Keeping the old copy until the new one is ready means reads never see a gap.'),
+        alt('cut', 'Switch routing first, copy later', 'wrong', 'Reads for that range miss until the copy finishes.'),
+        alt('stop', 'Stop the cluster while moving', 'wrong', 'Downtime to avoid a copy problem is a bad trade.'),
+      ], ['Only the new server’s predecessor range moves, so the transfer is small.'], 'Describe a safe key-range migration when adding a node to a consistent-hash cluster, including how clients keep working.'),
+    ],
+    remove: [
+      step('replicas-ring', 'Not losing data when a server dies', 'A cache can refetch lost data, but a store cannot. How does a ring help store data durably?', [
+        best('next-n', 'Copy each key to the next N servers clockwise', 'Right. The successors already own the neighbouring range, so when a server dies, replicas are right where lookups will land.'),
+        alt('one', 'Keep a single copy and hope', 'wrong', 'One failed server loses its range for good.'),
+        alt('all', 'Copy every key to every server', 'wrong', 'Wasteful and slow to write.'),
+      ], ['Pick distinct physical servers, not several virtual nodes of the same machine.'], 'Extend my hash ring to return N distinct physical servers for each key, skipping virtual nodes of a machine already chosen.'),
+    ],
+    vnodes: [
+      step('vcount', 'How many virtual nodes?', 'More virtual nodes balance better. What limits how many you use?', [
+        best('trade', 'The metadata to store and look up grows with the count, so choose enough to balance without bloating', 'Right. Around 100-200 per server is common: the load variation shrinks as the count grows.'),
+        alt('inf', 'As many as possible, without limit', 'wrong', 'Memory and lookup cost grow with every virtual node.'),
+        alt('one', 'One per server is enough', 'wrong', 'That is the uneven basic ring.'),
+      ], ['Standard deviation of load shrinks as virtual nodes increase.'], 'Measure the standard deviation of keys per server for 1, 10, 100 and 1000 virtual nodes per server.'),
