@@ -188,3 +188,32 @@ export const extras1: Extras = {
         alt('rand', 'To make IDs look random', 'wrong', 'The opposite: they are ordered.'),
         alt('size', 'Because it is the largest field', 'wrong', 'Position, not size, gives the ordering.'),
       ], ['41 bits of milliseconds is about 69 years from a custom epoch.'], 'Compute how long 41 bits of millisecond timestamps last, and how to pick an epoch.'),
+      step('sequence', 'Two IDs in the same millisecond', 'Two requests hit one machine in the same millisecond. What keeps their IDs different?', [
+        best('seq', 'The 12-bit sequence number, reset every millisecond', 'Right. It counts IDs within a millisecond: up to 4,096 per machine.'),
+        alt('time', 'Wait until the next millisecond always', 'ok', 'Unique, but throughput collapses to 1,000 per second per machine.'),
+        alt('rand', 'Add a random number', 'wrong', 'Collisions are possible.'),
+      ], ['If the sequence overflows within a millisecond, wait for the next one.'], 'Implement the sequence counter with overflow handling that waits for the next millisecond.'),
+      step('workers', 'Who gets which machine ID?', 'Each generator embeds a datacenter ID and machine ID. How are they assigned?', [
+        best('config', 'Assign them at startup through configuration or a coordination service, making sure none repeat', 'Right. Two machines with the same ID would produce duplicates, so assignment must be unique.', { add: [n('zk', 'Coordination service', 'ring', 5.5, 3.6, 'Hands each generator a unique datacenter and machine ID at startup.')], edges: ['g1>>zk:IDs', 'g3>>zk'] }),
+        alt('rand', 'Pick them randomly at startup', 'wrong', 'Random 10-bit values will collide in a large fleet.'),
+        alt('same', 'Use the same ID everywhere', 'wrong', 'Guaranteed duplicates.'),
+      ], ['5 bits give 32 datacenters and 5 bits give 32 machines each.'], 'Design machine ID assignment using a coordination service with leases so replacements never reuse a live ID.'),
+    ],
+    clock: [
+      step('ha', 'The generator must stay up', 'Every write in the system needs an ID. If the generator dies, writes stop. What do you do?', [
+        best('many', 'Run many independent generators; no coordination is needed between them', 'Right. Snowflake’s strength: each machine mints IDs alone, so you scale and survive failures by adding generators.', { d: { availability: 10 } }),
+        alt('one', 'One highly reliable generator', 'wrong', 'Still a single point of failure.'),
+        alt('db', 'Ask a database for each ID', 'ok', 'Works, but the database is now the bottleneck again.'),
+      ], ['Section lengths are tunable: more sequence bits for high concurrency, more timestamp bits for longevity.'], 'Describe how to deploy ID generators in three data centers so the loss of one machine or site does not stop ID creation.'),
+    ],
+  },
+
+  'message-queue': {
+    parts: [
+      step('models', 'Queue or topic?', 'Some messages must be handled by one consumer; others should reach many. How do models differ?', [
+        best('both', 'Point-to-point: one consumer gets each message. Publish-subscribe: every subscriber gets a copy', 'Right. A queue is point-to-point; a topic is publish-subscribe. Partitions and consumer groups combine both.'),
+        alt('same', 'They are identical', 'wrong', 'They differ in who receives each message.'),
+        alt('pubsub', 'Publish-subscribe means only one subscriber gets it', 'wrong', 'It means all subscribers do.'),
+      ], ['Messages are removed on consumption in classic queues; log-based systems keep them for a retention period.'], 'Compare a point-to-point queue with a pub/sub topic using a notification example.'),
+    ],
+    group: [
