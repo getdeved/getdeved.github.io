@@ -30,3 +30,30 @@ export const extras2: Extras = {
       ], ['Web tier is stateless; all state lives in the database and cache.'], 'Make my redirect service stateless and describe how a load balancer health-checks and adds instances.'),
     ],
     analytics: [
+      step('dbscale', 'The database grows', 'Billions of rows and heavy reads. How do you scale the data tier?', [
+        best('rep', 'Replicate for reads and availability, then shard by key if needed', 'Right. Replicas absorb reads and give a failover target; sharding comes next when one primary cannot hold the data.', { add: [n('rep', 'DB replica', 'replica', 5, 3.5, 'A read-only copy of the URL table.')], edges: ['db>>rep'], d: { availability: 15, capacity: 10 } }),
+        alt('one', 'Keep one database and add RAM', 'wrong', 'It remains a single point of failure with a ceiling.'),
+        alt('shard', 'Shard first, replicate never', 'ok', 'Sharding solves size, but without replicas a shard failure loses data.'),
+      ], ['Short codes hash evenly, so they make a good shard key.'], 'Add a read replica for lookups and route GET /:code to it while POST goes to the primary.'),
+    ],
+  },
+
+  'web-crawler': {
+    frontier: [
+      step('bfs', 'Breadth-first or depth-first?', 'How should the crawler walk the web?', [
+        best('bfs', 'Breadth-first with a FIFO queue', 'Right. DFS can disappear down an enormously deep path. BFS spreads out from the seeds and fits a queue.'),
+        alt('dfs', 'Depth-first, to finish each site', 'wrong', 'Depth is unpredictable and can be extreme.'),
+        alt('random', 'Random order', 'ok', 'Avoids depth traps but gives no control or politeness.'),
+      ], ['Plain BFS ignores priority and politeness, which is why the frontier does more.'], 'Implement a BFS crawler loop with a queue and a visited set, limited by depth.'),
+      step('seeds', 'Choosing seed URLs', 'The crawl needs starting points. What makes good seeds?', [
+        best('diverse', 'A diverse set of popular sites, by topic or region', 'Right. Well-connected, varied seeds reach more of the web quickly.'),
+        alt('one', 'One single site', 'wrong', 'You only reach what that site links to.'),
+        alt('random', 'Random IP addresses', 'wrong', 'Most do not serve useful pages.'),
+      ], ['Partition seeds by locality or topic.'], 'Propose a seed URL strategy for crawling news sites worldwide.'),
+    ],
+    polite: [
+      step('priority', 'Some pages matter more', 'A forum front page changes hourly; an archive page never. How do you decide what to fetch first?', [
+        best('pri', 'A prioritiser scores URLs and feeds higher-priority queues more often', 'Right. Score by usefulness (for example PageRank, traffic, update frequency) and pull from high-priority queues with a bias.', { add: [n('pri', 'Prioritizer', 'trend', 1.8, 0.5, 'Scores URLs by importance and places them in priority queues.')], edges: ['pri>fr'], d: { speed: 5 } }),
+        alt('fifo', 'Plain first-in first-out', 'ok', 'Fair, but wastes effort on low-value pages.'),
+        alt('alpha', 'Alphabetical order', 'wrong', 'Unrelated to value.'),
+      ], ['Priority queues plus per-host queues together give both importance and politeness.'], 'Design a two-stage frontier: front queues by priority, back queues by host.'),
