@@ -217,3 +217,35 @@ export const extras1: Extras = {
       ], ['Messages are removed on consumption in classic queues; log-based systems keep them for a retention period.'], 'Compare a point-to-point queue with a pub/sub topic using a notification example.'),
     ],
     group: [
+      step('rebalance', 'A consumer joins or dies', 'A consumer in the group stops sending heartbeats. What happens to its partitions?', [
+        best('reassign', 'The group rebalances: its partitions are reassigned to the remaining consumers', 'Right. A coordinator notices the missing heartbeat and redistributes partitions, and consumers resume from the saved offsets.'),
+        alt('wait', 'Its partitions wait until it returns', 'wrong', 'Messages would pile up unprocessed.'),
+        alt('all', 'Every consumer starts reading every partition', 'wrong', 'That causes duplicates.'),
+      ], ['Consumer offsets live in a state store, so a replacement continues where the old one left off.'], 'Explain the sequence when a consumer leaves a group: heartbeat timeout, rebalance, offset resume.'),
+      step('push-pull', 'Push or pull?', 'Should the broker push messages to consumers, or should consumers pull?', [
+        best('pull', 'Pull: consumers ask at their own pace', 'Right. Consumers control their rate, can batch, and a slow one does not get flooded. Pull is the common choice.'),
+        alt('push', 'Push: broker sends as soon as it arrives', 'ok', 'Lower latency, but a slow consumer can be overwhelmed.'),
+        alt('poll', 'Poll every minute', 'wrong', 'Needless delay; long polling avoids busy waiting.'),
+      ], ['Pull consumers can use long polling to avoid empty fetches.'], 'Implement a pull consumer loop with batch size, long polling timeout and offset commit.'),
+    ],
+    log: [
+      step('batch', 'Batching messages', 'Sending messages one at a time is slow. What does batching trade off?', [
+        best('trade', 'Larger batches raise throughput but add latency', 'Right. Batching amortises network and disk overhead, at the cost of waiting for a batch to fill.'),
+        alt('both', 'Larger batches improve both throughput and latency', 'wrong', 'Waiting to fill a batch adds delay.'),
+        alt('none', 'Batching has no effect', 'wrong', 'It is one of the biggest throughput levers.'),
+      ], ['Tune batch size and wait time for your use case.'], 'Add configurable batch size and linger time to my producer and measure throughput versus latency.'),
+      step('msg', 'What is in a message?', 'Besides the payload, what metadata does each stored message carry?', [
+        best('meta', 'Topic, partition, offset, timestamp, size and a checksum', 'Right. The offset locates it, the checksum catches corruption, and the rest support routing and retention.'),
+        alt('payload', 'Only the payload', 'wrong', 'Without an offset and checksum you cannot locate or verify it.'),
+        alt('id', 'A random UUID only', 'wrong', 'Offsets, not random IDs, define order within a partition.'),
+      ], ['Messages are located by topic, partition and offset.'], 'Define a binary message format with offset, timestamp, key, value, and a CRC, and write the encoder.'),
+    ],
+    replica: [
+      step('retention', 'Keeping old messages', 'Disks fill up. How long should the queue keep messages?', [
+        best('time', 'A configurable retention by time or size, then delete old segments', 'Right. Segment files make deletion cheap, and retention lets slow or new consumers catch up.'),
+        alt('forever', 'Forever', 'wrong', 'Storage cost grows without limit.'),
+        alt('read', 'Delete as soon as one consumer reads it', 'ok', 'Fine for a classic queue, but other groups and replays are impossible.'),
+      ], ['Message filtering and delayed delivery are optional features built on top.'], 'Configure retention by 7 days or 100 GB per partition and describe how segment deletion works.'),
+    ],
+  },
+}
