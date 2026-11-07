@@ -115,3 +115,32 @@ export const extras2: Extras = {
 
   'news-feed': {
     two: [
+      step('auth', 'Who can call these APIs?', 'Publishing and reading are user-specific. What must web servers do on every call?', [
+        best('auth', 'Authenticate the user, and apply rate limits', 'Right. Identity decides whose feed to read and who may post, and limits stop abuse.'),
+        alt('trust', 'Trust the user ID in the request', 'wrong', 'Anyone could read or post as someone else.'),
+        alt('none', 'Skip auth for speed', 'wrong', 'It is a basic requirement.'),
+      ], ['Use an auth token on both endpoints.'], 'Add token authentication and per-user rate limiting middleware to my feed API.'),
+    ],
+    fanout: [
+      step('graph', 'Who are my friends?', 'Fan-out needs the list of a user’s friends. Where does it come from?', [
+        best('gdb', 'A graph or friendship store, with hot data cached', 'Right. Friend lists are read at every fan-out, so a fast store and cache matter.', { add: [n('gdb', 'Graph DB', 'ring', 6, 0.2, 'Stores who follows or is friends with whom.')], edges: ['fo>gdb:friend IDs'], d: { complexity: 5 } }),
+        alt('scan', 'Scan all posts', 'wrong', 'Far too slow.'),
+        alt('client', 'Ask the client to send its friends', 'wrong', 'Not trustworthy.'),
+      ], ['Filter out muted or blocked friends before pushing.'], 'Design the friendship table and a cached friend-ID lookup used by the fan-out service.'),
+    ],
+    cache: [
+      step('retrieve', 'Reading the feed', 'A user opens the app. What happens?', [
+        best('hydrate', 'Fetch post IDs from the feed cache, then hydrate them from content and user caches', 'Right. IDs are cheap to store and fetch; full content comes from separate caches.'),
+        alt('db', 'Query every friend’s posts from the database', 'wrong', 'Too many queries per open.'),
+        alt('html', 'Rebuild the whole feed from scratch', 'ok', 'Correct but slow.'),
+      ], ['Return the newest posts first and paginate.'], 'Write the feed read path: get 20 post IDs, batch-fetch posts and authors, return JSON with a cursor.'),
+    ],
+    scale: [
+      step('notify', 'Tell friends about it', 'Besides filling feeds, a post may notify friends. Where does that happen?', [
+        best('ntf', 'A separate notification service called after publishing', 'Right. It is a different job with its own scaling and failure modes, so it runs on its own.', { add: [n('ntf', 'Notification service', 'bell', 2.8, 0.5, 'Sends push and in-app notifications about new posts.')], edges: ['post>>ntf'], d: { complexity: 5 } }),
+        alt('inline', 'Inside the post request', 'wrong', 'Slows publishing and couples the two.'),
+        alt('none', 'Never notify', 'ok', 'Possible but limits engagement.'),
+      ], ['Paginate feeds and cache by cursor.'], 'Publish a post-created event to a queue consumed by notification and fan-out workers separately.'),
+    ],
+  },
+
