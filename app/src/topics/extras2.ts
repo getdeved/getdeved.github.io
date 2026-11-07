@@ -86,3 +86,32 @@ export const extras2: Extras = {
         alt('hard', 'Pass addresses in each request', 'ok', 'Every caller must know them, and they go stale.'),
         alt('none', 'Do not store any', 'wrong', 'There is nobody to send to.'),
       ], ['Collect device tokens and contact details at signup or app install.'], 'Design a users table and a device_tokens table (user_id, token, platform, last_seen) for push notifications.'),
+      step('triggers', 'What starts a notification?', 'Notifications can come from other services or on a schedule. Which fits a shipping update?', [
+        best('event', 'A service event, sent to the notification system as a request', 'Right. Events from other services are the usual trigger; scheduled jobs handle reminders and digests.'),
+        alt('poll', 'The notification system polls every service constantly', 'wrong', 'Wasteful and slow.'),
+        alt('manual', 'Staff send each one by hand', 'wrong', 'Does not scale.'),
+      ], ['Both client apps and server-side schedulers can trigger notifications.'], 'Define the API a service calls to send a notification: user, type, template, parameters.'),
+    ],
+    reliable: [
+      step('dedupe', 'Avoiding duplicates', 'A retry resends a notification that actually went out. How do you avoid annoying the user?', [
+        best('eventid', 'Give every notification an event ID and check it before sending', 'Right. A seen ID means skip. Duplicates can never be fully ruled out, but this removes most.'),
+        alt('none', 'Accept duplicates', 'ok', 'Fine for low-stakes messages, bad for payment alerts.'),
+        alt('never', 'Never retry', 'wrong', 'You would lose notifications on any failure.'),
+      ], ['Exactly-once delivery is not realistic with third-party providers.'], 'Add an event_id uniqueness check before calling the provider, and a TTL for stored IDs.'),
+    ],
+    prefs: [
+      step('limit', 'Do not flood a user', 'A bug fires 50 notifications at one user in a minute. What protects them?', [
+        best('rl', 'A per-user rate limit on notifications', 'Right. Capping frequency prevents floods and keeps users from turning notifications off.', { add: [n('rlim', 'Rate limiter', 'gauge', 1, 3, 'Limits how many notifications one user receives in a period.')], edges: ['rlim>ns'], d: { availability: 5 } }),
+        alt('none', 'Trust upstream services', 'wrong', 'Bugs happen.'),
+        alt('delete', 'Delete the user’s tokens', 'wrong', 'That silences them completely.'),
+      ], ['Combine with preferences: users choose what they receive.'], 'Add a per-user, per-hour cap on push notifications with a suppressed counter metric.'),
+      step('events', 'Did it work?', 'You sent a million notifications. How do you learn what happened?', [
+        best('track', 'Record events: sent, delivered, opened, clicked', 'Right. Analytics tell you what works, and monitoring the queues tells you when to scale.', { add: [n('ev', 'Event tracking', 'chart', 1, 4.9, 'Records what happened to each notification, from sent to clicked.')], edges: ['ns>>ev'], d: { speed: 0, complexity: 5 } }),
+        alt('guess', 'Guess from revenue', 'wrong', 'Too indirect.'),
+        alt('none', 'Do not measure', 'wrong', 'You cannot improve what you cannot see.'),
+      ], ['Monitor queued notifications: a growing queue means add workers.'], 'Log notification lifecycle events with IDs and write a query for open rate by notification type.'),
+    ],
+  },
+
+  'news-feed': {
+    two: [
