@@ -57,3 +57,32 @@ export const extras2: Extras = {
         alt('fifo', 'Plain first-in first-out', 'ok', 'Fair, but wastes effort on low-value pages.'),
         alt('alpha', 'Alphabetical order', 'wrong', 'Unrelated to value.'),
       ], ['Priority queues plus per-host queues together give both importance and politeness.'], 'Design a two-stage frontier: front queues by priority, back queues by host.'),
+      step('fresh', 'Pages change', 'A page you crawled last month has changed. How does the crawler know to revisit it?', [
+        best('recrawl', 'Recrawl based on update history, more often for pages that change often', 'Right. Recrawling everything is impossible, so adapt frequency to how often each page changes.'),
+        alt('never', 'Never revisit', 'wrong', 'The index goes stale.'),
+        alt('all', 'Recrawl everything daily', 'wrong', 'Far too expensive for billions of pages.'),
+      ], ['Use HTTP headers such as Last-Modified and ETag to check cheaply.'], 'Implement conditional GET with ETag and a per-URL recrawl interval adjusted by observed change rate.'),
+    ],
+    dedupe: [
+      step('traps', 'Spider traps', 'A calendar page links to “next month” forever. How do you stop the crawler getting lost?', [
+        best('limit', 'Cap URL length and depth, filter known patterns, and allow manual blocklists', 'Right. Traps generate endless valid-looking URLs, so guard rails keep the crawler finite.'),
+        alt('trust', 'Trust every link', 'wrong', 'The crawler could follow it forever.'),
+        alt('ignore', 'Ignore all dynamic links', 'wrong', 'You would miss large parts of the web.'),
+      ], ['Also validate HTML: much of the web is malformed.'], 'Add URL length, depth and repeated-pattern limits to my crawler to avoid spider traps.'),
+    ],
+    scale: [
+      step('extend', 'New content types', 'Next year you also need images and PDFs. How should the design allow that?', [
+        best('plug', 'Make parsing and processing pluggable modules after the downloader', 'Right. New content types become new modules, not redesigns.', { add: [n('mod', 'Pluggable modules', 'layers', 6.1, 4.2, 'Extra processors for new content types such as images or PDFs.')], edges: ['cs>>mod'], d: { complexity: 5 } }),
+        alt('hard', 'Hard-code HTML handling', 'wrong', 'Every new type needs invasive changes.'),
+        alt('fork', 'Build a separate crawler per type', 'ok', 'Works, but duplicates all the crawling logic.'),
+      ], ['Extensibility is one of the four design goals: scalable, robust, polite, extensible.'], 'Define a ContentProcessor interface and register processors for HTML, images and PDFs in a crawler pipeline.'),
+    ],
+  },
+
+  notifications: {
+    providers: [
+      step('contacts', 'Where is the contact info?', 'To send a push, SMS or email you need an address. Where do they live?', [
+        best('tables', 'A user table for email and phone, and a device-token table for push', 'Right. A user can have several devices, so tokens get their own table keyed by user.', { add: [n('udb', 'User DB', 'db', 2, 0.5, 'Holds emails, phone numbers and push device tokens per user.')], edges: ['ns>udb'], d: { complexity: 5 } }),
+        alt('hard', 'Pass addresses in each request', 'ok', 'Every caller must know them, and they go stale.'),
+        alt('none', 'Do not store any', 'wrong', 'There is nobody to send to.'),
+      ], ['Collect device tokens and contact details at signup or app install.'], 'Design a users table and a device_tokens table (user_id, token, platform, last_seen) for push notifications.'),
