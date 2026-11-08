@@ -201,3 +201,32 @@ export const extras2: Extras = {
       ], ['Delete in the trie cache and the database when a suggestion is reported.'], 'Add a blocklist filter to my trie builder and a hot-reload for new blocked terms.'),
     ],
     speed: [
+      step('shard', 'The trie is too big for one server', 'The whole trie no longer fits in memory. What do you do?', [
+        best('shard', 'Shard the trie across servers by prefix, using observed traffic to balance', 'Right. Split by leading letters, and balance on real query volume since letters are not equally popular.', { add: [n('t2', 'Trie shard B', 'ring', 4.4, 0.5, 'A second server holding another slice of the prefix space.')], edges: ['qs>t2'], d: { capacity: 15, complexity: 10 } }),
+        alt('big', 'Buy more RAM for one server', 'ok', 'Works until it does not.'),
+        alt('disk', 'Keep the trie on disk only', 'wrong', 'Disk reads are too slow for keystroke latency.'),
+      ], ['Shard by prefix ranges, with a lookup table for the mapping.'], 'Design a prefix-to-shard mapping that balances load using historical query counts.'),
+    ],
+  },
+
+  youtube: {
+    upload: [
+      step('chunks', 'Resumable uploads', 'A 1 GB upload fails at 95%. How do you avoid starting over?', [
+        best('chunk', 'Upload in chunks and resume from the last completed one', 'Right. Chunking turns one fragile transfer into many small, retriable ones.'),
+        alt('one', 'One request, retry from the beginning', 'wrong', 'Wastes time and bandwidth.'),
+        alt('email', 'Ask the user to compress it', 'wrong', 'Not a systems fix.'),
+      ], ['Chunks can upload in parallel too.'], 'Implement chunked, resumable uploads with a server-side record of received chunks.'),
+    ],
+    transcode: [
+      step('dag', 'Pipeline stages', 'Transcoding is more than conversion: split, encode, thumbnails, watermarks. How do you organise it?', [
+        best('dag', 'A DAG scheduler that runs stages in sequence or in parallel as dependencies allow', 'Right. A graph of tasks lets independent stages run side by side, and a resource manager assigns workers.', { add: [n('dag', 'DAG scheduler', 'layers', 1, 4.7, 'Decides which transcoding tasks run when, in order or in parallel.')], edges: ['dag>tr'], d: { speed: 5 } }),
+        alt('seq', 'One big sequential script', 'ok', 'Simple but slow.'),
+        alt('manual', 'Manual steps', 'wrong', 'Not scalable.'),
+      ], ['Preprocessor splits the video into GOP-aligned chunks; task workers do the encoding.'], 'Model a transcoding job as a DAG with split, encode-per-resolution, thumbnail and merge tasks.'),
+      step('codec', 'Containers and codecs', 'What is the difference between MP4 and H.264?', [
+        best('def', 'MP4 is a container; H.264 is a codec that compresses the video inside it', 'Right. The container wraps video, audio and metadata; the codec compresses and decompresses.'),
+        alt('same', 'They are the same', 'wrong', 'One is a wrapper, the other a compression algorithm.'),
+        alt('reverse', 'H.264 is a container; MP4 a codec', 'wrong', 'Reversed.'),
+      ], ['Common codecs: H.264, VP9, HEVC.'], 'Explain container versus codec and produce an ffmpeg command re-encoding to H.264 in an MP4 container.'),
+    ],
+    stream: [
