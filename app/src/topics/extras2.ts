@@ -230,3 +230,35 @@ export const extras2: Extras = {
       ], ['Common codecs: H.264, VP9, HEVC.'], 'Explain container versus codec and produce an ffmpeg command re-encoding to H.264 in an MP4 container.'),
     ],
     stream: [
+      step('adaptive', 'Switching quality on the fly', 'A viewer’s Wi-Fi gets slow mid-video. What keeps playback smooth?', [
+        best('abr', 'Adaptive streaming: the player switches between pre-made quality levels', 'Right. Many small segments at several bitrates let the player pick the best for current speed.'),
+        alt('fixed', 'One fixed quality', 'wrong', 'Buffering on slow links, waste on fast ones.'),
+        alt('server', 'The server decides per viewer', 'ok', 'Possible but the client knows its network best.'),
+      ], ['Protocols: HLS and MPEG-DASH.'], 'Describe how an HLS player chooses a bitrate from its buffer level and measured throughput.'),
+    ],
+  },
+
+  drive: {
+    store: [
+      step('upload-types', 'Two kinds of upload', 'Small files and huge files behave differently. How are uploads supported?', [
+        best('two', 'Simple upload for small files, and resumable upload for large ones', 'Right. Resumable uploads survive network drops, which matter for big files.'),
+        alt('one', 'One method for everything', 'ok', 'Simplest, but large uploads are fragile.'),
+        alt('email', 'Email the file', 'wrong', 'Not an option.'),
+      ], ['Metadata (name, path, size) is stored separately from content.'], 'Offer a single-request upload for small files and a resumable session API for large ones.'),
+    ],
+    blocks: [
+      step('conflicts', 'Two people edit the same file', 'You and a teammate both edit a file offline. Whose version wins?', [
+        best('copy', 'The first sync wins; the second is saved as a separate conflicted copy for a manual merge', 'Right. Nothing is lost silently, and the user decides how to merge.'),
+        alt('lww', 'Last write silently wins', 'wrong', 'One person’s work disappears.'),
+        alt('lock', 'Lock files so only one person edits', 'ok', 'Avoids conflicts but blocks offline work.'),
+      ], ['Version history lets users recover older revisions.'], 'Detect sync conflicts by comparing base versions, and create a “conflicted copy” file.'),
+    ],
+    cost: [
+      step('replicate', 'Never lose a file', 'Reliability is the top requirement. How do you protect stored blocks?', [
+        best('multi', 'Replicate across regions', 'Right. A second region means even a regional disaster loses nothing.', { add: [n('st2', 'Cloud storage B', 'cloud', 6, 3.3, 'A copy of the blocks in another region.')], edges: ['st>>st2:replicate'], d: { availability: 15 } }),
+        alt('one', 'One copy on good disks', 'wrong', 'Any failure loses data.'),
+        alt('backup', 'Weekly tape backup', 'ok', 'A last resort, but recovery is slow.'),
+      ], ['Replicate metadata too, with replicas and sharding.'], 'Configure cross-region replication for the block bucket and test failover of reads.'),
+    ],
+  },
+}
