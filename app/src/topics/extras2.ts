@@ -172,3 +172,32 @@ export const extras2: Extras = {
       ], ['Cursor = max message ID seen on that device.'], 'Add per-device last-seen message IDs and a sync endpoint returning messages after a given ID.'),
     ],
     presence: [
+      step('presence-fan', 'Telling friends you are online', 'Your status changes. Who needs to know?', [
+        best('subs', 'Only friends who are currently online and watching, via pub/sub', 'Right. A channel per user: friends subscribe on connect. For huge groups, fetch presence on demand instead.'),
+        alt('all', 'Broadcast to everyone', 'wrong', 'Wasteful.'),
+        alt('none', 'Nobody until they ask', 'ok', 'Cheap but stale.'),
+      ], ['Fan-out cost grows with friends; limit it for big groups.'], 'Publish presence changes to a per-user channel and subscribe friends’ chat servers on connect.'),
+    ],
+  },
+
+  autocomplete: {
+    trie: [
+      step('topk', 'Finding the top five', 'In the trie, a prefix node has thousands of descendants. How do you return the top five quickly?', [
+        best('cache', 'Store the top-k list at each node', 'Right. The answer is precomputed, so a query is just walk the prefix and read the list.'),
+        alt('walk', 'Walk and sort all descendants on each request', 'wrong', 'Far too slow for per-keystroke queries.'),
+        alt('db', 'Query SQL with ORDER BY', 'wrong', 'Scans and sorts a huge table each time.'),
+      ], ['Trade-off: more memory for top-k caches in exchange for speed.'], 'Extend my trie nodes with a precomputed top-5 list and update it when frequencies change.'),
+      step('limit', 'How long is a prefix?', 'Users rarely type more than 50 characters. How does that help?', [
+        best('cap', 'Cap the prefix length, so the trie stays shallow and lookups are constant-ish', 'Right. A depth limit bounds memory and lookup time.'),
+        alt('inf', 'Support unlimited prefix length', 'ok', 'Correct but wastes memory on rare long queries.'),
+        alt('one', 'Only index first letters', 'wrong', 'Suggestions would be useless.'),
+      ], ['Use AJAX requests so the page does not reload.'], 'Enforce a maximum indexed prefix length of 50 and trim longer queries.'),
+    ],
+    build: [
+      step('filter', 'Removing bad suggestions', 'Some suggestions are hateful or illegal. How do you keep them out?', [
+        best('filter', 'A filter layer between the data and the trie that removes unwanted entries', 'Right. Filtering at build time keeps them out of results and can react to reports.', { add: [n('filt', 'Filter', 'filter', 5.7, 1.2, 'Removes hateful, unsafe or unwanted queries before they reach the trie.')], edges: ['filt>>t'], d: { availability: 5 } }),
+        alt('trust', 'Trust users', 'wrong', 'Bad suggestions will appear.'),
+        alt('manual', 'Review every suggestion by hand', 'wrong', 'Impossible at scale.'),
+      ], ['Delete in the trie cache and the database when a suggestion is reported.'], 'Add a blocklist filter to my trie builder and a hot-reload for new blocked terms.'),
+    ],
+    speed: [
