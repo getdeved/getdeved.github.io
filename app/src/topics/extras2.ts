@@ -144,3 +144,31 @@ export const extras2: Extras = {
     ],
   },
 
+  chat: {
+    proto: [
+      step('stateless', 'Which services are stateless?', 'Chat servers hold connections. What about login, profiles and group management?', [
+        best('split', 'Stateless request-response services behind a load balancer; only chat servers are stateful', 'Right. Keep state where you must (connections) and nowhere else, so most services scale easily.', { add: [n('api', 'API servers', 'server', 0, 3, 'Stateless services for login, profile and groups.')], edges: ['a>api:login, groups'], d: { capacity: 10 } }),
+        alt('all', 'Make everything stateful', 'wrong', 'Needless coupling and harder scaling.'),
+        alt('one', 'Put everything in the chat server', 'wrong', 'One big stateful monolith.'),
+      ], ['Only connection-holding servers need to be stateful.'], 'Split my chat backend into a stateless API service and a stateful WebSocket gateway.'),
+    ],
+    route: [
+      step('ids', 'Ordering messages', 'Two messages arrive close together. How do you keep them in order within a conversation?', [
+        best('seq', 'A sequence number that increases within each chat', 'Right. Order matters per conversation, so IDs need only be sortable within a chat, not globally unique in time.'),
+        alt('clock', 'Client timestamps', 'wrong', 'Clocks differ between devices.'),
+        alt('rand', 'Random IDs', 'wrong', 'No order.'),
+      ], ['A local sequence generator per channel is enough.'], 'Generate per-channel increasing message IDs using a counter in the database or Redis.'),
+      step('group', 'Group chat', 'A message to a group of 50 must reach each member. How do you deliver?', [
+        best('inbox', 'Copy the message into each member’s inbox queue', 'Right. Fine for small groups (about 100), and each member syncs from their own queue.'),
+        alt('poll', 'Everyone polls the group record', 'ok', 'Simple but slow and chatty.'),
+        alt('email', 'Send each one by email', 'wrong', 'Not real-time.'),
+      ], ['For huge groups, switch to fetch-on-demand.'], 'Implement group delivery by writing a message to every member’s inbox and notifying their connected servers.'),
+    ],
+    store: [
+      step('devices', 'Multiple devices', 'One person uses a phone and a laptop. How does each stay in sync?', [
+        best('cursor', 'Each device tracks the last message ID it has seen, and syncs the rest', 'Right. A per-device cursor lets every device catch up independently.'),
+        alt('one', 'Only the newest device gets messages', 'wrong', 'The other device misses everything.'),
+        alt('copy', 'Copy the full history on every login', 'ok', 'Correct but wasteful.'),
+      ], ['Cursor = max message ID seen on that device.'], 'Add per-device last-seen message IDs and a sync endpoint returning messages after a given ID.'),
+    ],
+    presence: [
