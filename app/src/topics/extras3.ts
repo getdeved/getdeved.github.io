@@ -118,3 +118,31 @@ export const extras3: Extras = {
     ],
   },
 
+  metrics: {
+    collect: [
+      step('model', 'What is a metric?', 'Before storing metrics, how do you model one?', [
+        best('series', 'A name plus labels, with a series of (timestamp, value) pairs', 'Right. For example cpu.load with host=web1 and region=us. Labels make slicing easy.'),
+        alt('row', 'One text log line per reading', 'ok', 'Hard to query and aggregate.'),
+        alt('single', 'One current value per name', 'wrong', 'History is the point.'),
+      ], ['Metrics are append-only: you add points, you rarely edit them.'], 'Define a metric data model with name, labels and points, and a query for average cpu.load by region.'),
+      step('pullpush', 'Pull or push?', 'Should the system fetch metrics from sources, or should sources send them?', [
+        best('both', 'Pull suits long-running services with discovery; push suits short-lived jobs', 'Right. Pull knows what should exist and spots a missing target; push is needed when a job is gone before you can scrape it.'),
+        alt('pull', 'Always pull', 'ok', 'Struggles with very short-lived jobs.'),
+        alt('push', 'Always push', 'ok', 'Cannot easily tell the difference between silence and failure.'),
+      ], ['Service discovery tells pull collectors which targets exist.'], 'Compare pull and push metric collection with an example where each fails.'),
+    ],
+    queue: [
+      step('agg', 'Where to aggregate', 'Aggregating before storage saves space. Where can it happen?', [
+        best('where', 'In the collection agent (simple), the ingestion pipeline (stream processing), or at query time (flexible)', 'Right. Each trades simplicity, data volume and flexibility differently.'),
+        alt('never', 'Never aggregate', 'wrong', 'Storage costs balloon.'),
+        alt('only', 'Only in the database', 'ok', 'Possible but unreduced data still flows everywhere.'),
+      ], ['Stream processors such as Flink aggregate in flight.'], 'Aggregate per-second counters into per-minute sums in a stream job before writing to the TSDB.'),
+    ],
+    store: [
+      step('qc', 'Repeated dashboard queries', 'Fifty people open the same dashboard. Should the database answer fifty times?', [
+        best('cache', 'Cache query results briefly', 'Right. Dashboards ask the same thing repeatedly; a short cache removes most load.', { add: [n('qc', 'Query cache', 'cache', 5.7, 1.6, 'Caches results of repeated dashboard queries for a short time.')], edges: ['q>qc'], d: { speed: 10 } }),
+        alt('no', 'No cache, always fresh', 'ok', 'Fine at small scale.'),
+        alt('manual', 'Ask users not to refresh', 'wrong', 'Not a design.'),
+      ], ['Visualisation: Grafana-style dashboards over the query service.'], 'Add a 30 second cache keyed by the query text and time range to the query service.'),
+    ],
+    alert: [
