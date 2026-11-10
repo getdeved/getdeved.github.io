@@ -89,3 +89,32 @@ export const extras3: Extras = {
         alt('one', 'One set of tiles scaled in the browser', 'wrong', 'Blurry or huge.'),
         alt('render', 'Render everything on the server for each request', 'wrong', 'Expensive and uncacheable.'),
       ], ['At zoom 21 there are about 4.4 trillion tiles.'], 'Compute the number of tiles at zoom levels 0 to 5 and a function mapping (lat, lng, zoom) to (x, y).'),
+      step('vector', 'Vector tiles', 'Image tiles are heavy. What is an alternative?', [
+        best('vec', 'Vector tiles: send shapes and styles, and let the client draw them', 'Right. Smaller downloads, crisp at any zoom, and flexible styling.'),
+        alt('bigger', 'Larger images', 'wrong', 'More data.'),
+        alt('text', 'Text descriptions', 'wrong', 'Not a map.'),
+      ], ['Vector tiles shift rendering work to the device.'], 'Compare raster and vector tiles in size, rendering cost and styling flexibility.'),
+    ],
+    loc: [
+      step('mapdata', 'Where does the map come from?', 'Map tiles and routing graphs need source data. How are they produced?', [
+        best('pipeline', 'An offline pipeline processes raw road data into tiles and routing graphs', 'Right. The heavy work happens in batch; serving then just reads precomputed files.'),
+        alt('live', 'Compute everything live per request', 'wrong', 'Far too slow.'),
+        alt('manual', 'Draw maps by hand', 'wrong', 'Does not scale.'),
+      ], ['Pipelines run periodically and publish new tile sets.'], 'Outline a batch pipeline from raw OpenStreetMap data to vector tiles and routing tiles.'),
+    ],
+    route: [
+      step('hier', 'Roads at different scales', 'A cross-country route does not need every back alley. How does the search skip detail?', [
+        best('levels', 'Hierarchical routing tiles: local, arterial and highway levels', 'Right. Start local, climb to highways for the long stretch, descend near the destination.'),
+        alt('flat', 'One flat graph', 'wrong', 'The search explores far too many small roads.'),
+        alt('highway', 'Only highways', 'wrong', 'You cannot reach the destination.'),
+      ], ['Roads are edges; intersections are nodes.'], 'Design three tile levels for a road graph and the rules for connecting them.'),
+    ],
+    eta: [
+      step('reroute', 'Rerouting', 'A crash blocks your road. How does the app suggest a new route?', [
+        best('nav', 'A navigation service watches ETA and asks the routing service for alternatives', 'Right. It compares the live ETA with the original and reroutes when a better path appears.', { add: [n('nav', 'Navigation service', 'nav', 5.7, 2.1, 'Tracks the trip, compares live ETA to the plan and triggers reroutes.')], edges: ['nav>sp:alternatives', 'eta>nav'], d: { availability: 5 } }),
+        alt('driver', 'The driver picks a new route themselves', 'wrong', 'Defeats the purpose.'),
+        alt('never', 'Never reroute', 'wrong', 'Users sit in traffic.'),
+      ], ['Rerouting must be smooth: do not flip between routes constantly.'], 'Reroute only when an alternative saves more than 2 minutes, to avoid flip-flopping.'),
+    ],
+  },
+
