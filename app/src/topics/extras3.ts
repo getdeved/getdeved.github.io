@@ -146,3 +146,32 @@ export const extras3: Extras = {
       ], ['Visualisation: Grafana-style dashboards over the query service.'], 'Add a 30 second cache keyed by the query text and time range to the query service.'),
     ],
     alert: [
+      step('oncall', 'Who is on call?', 'An alert fires at 3am. Who receives it?', [
+        best('rota', 'The on-call engineer from a rota, with escalation if they do not acknowledge', 'Right. Routing to a person and escalating ensures it is actually handled.'),
+        alt('all', 'Everyone', 'wrong', 'Alert fatigue and no clear owner.'),
+        alt('none', 'Nobody, check in the morning', 'wrong', 'Defeats the purpose.'),
+      ], ['Group related alerts into one page.'], 'Define an escalation policy: page the primary, wait 10 minutes, then the secondary.'),
+    ],
+  },
+
+  'ad-clicks': {
+    ingest: [
+      step('query', 'Answering questions', 'Advertisers ask “clicks per ad in the last hour”. What serves that?', [
+        best('api', 'A query API over the aggregated table, not the raw events', 'Right. Pre-aggregated numbers answer instantly; raw data is for reprocessing.', { add: [n('qapi', 'Query API', 'search', 5.6, 0.5, 'Answers advertiser questions from the aggregated data.')], edges: ['qapi>db'], d: { speed: 10 } }),
+        alt('raw', 'Scan raw events for every question', 'wrong', 'Far too slow.'),
+        alt('manual', 'Export to a spreadsheet', 'wrong', 'Not near real time.'),
+      ], ['Typical queries: clicks per ad per minute, top N ads, filtered by country.'], 'Design GET /ads/{id}/clicks with from, to, interval and filter parameters over a pre-aggregated table.'),
+    ],
+    window: [
+      step('window-types', 'Kinds of time window', 'You count per minute. Which window type is that?', [
+        best('tumbling', 'Tumbling: fixed, non-overlapping slices', 'Right. Hopping and sliding windows overlap; tumbling does not.'),
+        alt('sliding', 'Sliding', 'wrong', 'Sliding windows overlap.'),
+        alt('session', 'Session', 'wrong', 'Session windows depend on activity gaps.'),
+      ], ['Hopping slides by a fixed step; sliding emits per event; session ends after inactivity.'], 'Implement tumbling and hopping windows over a stream and compare their outputs.'),
+    ],
+    exactly: [
+      step('hotspot', 'One ad goes viral', 'One ad receives most of the clicks. What happens to its aggregation node?', [
+        best('split', 'It is overloaded; spread that ad’s load by adding partitions or splitting the key', 'Right. Hot keys need extra resources or sub-keys that are merged afterwards.'),
+        alt('ignore', 'Nothing, nodes are identical', 'wrong', 'The node owning that key is overloaded.'),
+        alt('drop', 'Drop some clicks', 'wrong', 'Clicks are revenue.'),
+      ], ['Allocate more aggregation nodes for hot partitions.'], 'Split a hot ad key into 8 sub-keys, aggregate separately, then merge counts.'),
