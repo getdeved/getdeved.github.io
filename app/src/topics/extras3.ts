@@ -204,3 +204,35 @@ export const extras3: Extras = {
       ], ['Download is the reverse: look up metadata, then read the bytes by object ID.'], 'Write the PUT object flow: authorize, write bytes with a checksum, then insert metadata.'),
     ],
     durable: [
+      step('placement', 'Where do the bytes go?', 'Which machines hold each piece of data?', [
+        best('placement', 'A placement service decides, spreading copies across failure domains', 'Right. It knows the topology (racks, zones) and keeps copies apart.', { add: [n('pl', 'Placement service', 'ring', 2.8, 3.8, 'Decides which data nodes store each object, across racks and zones.')], edges: ['api>>pl', 'pl>ds'], d: { availability: 5 } }),
+        alt('rand', 'Pick any node', 'ok', 'Copies could land together and fail together.'),
+        alt('one', 'Always the same node', 'wrong', 'It fills up and is a single point of failure.'),
+      ], ['Heartbeats from data nodes keep the placement service informed.'], 'Choose three nodes for a replica set, one per rack in at least two zones.'),
+      step('checksum', 'Silent corruption', 'A bit flips on disk. How do you notice?', [
+        best('crc', 'Store a checksum with the data and verify it on read and in background scrubs', 'Right. A mismatch means the copy is bad, and a healthy replica can repair it.'),
+        alt('trust', 'Trust the disk', 'wrong', 'Corruption is rare but real at petabyte scale.'),
+        alt('user', 'Ask users to check', 'wrong', 'Unreliable.'),
+      ], ['Garbage collection also removes corrupted data.'], 'Add a per-object checksum and a background job that verifies a sample of objects daily.'),
+    ],
+    large: [
+      step('versioning', 'Versioning', 'A user overwrites an object by mistake. How can they get the old one back?', [
+        best('ver', 'Keep versions: each write adds a new version and the latest is the default', 'Right. Old versions remain until deleted, so mistakes are reversible.'),
+        alt('one', 'Overwrite in place', 'wrong', 'The old data is gone.'),
+        alt('backup', 'Ask the user to keep backups', 'wrong', 'Defeats the service.'),
+      ], ['Deleting adds a delete marker rather than erasing.'], 'Implement object versions with a version ID and a delete marker.'),
+      step('list', 'Listing a bucket', 'A bucket holds billions of objects. How does “list objects with this prefix” stay fast?', [
+        best('index', 'An index of metadata ordered by key, sharded by bucket and key', 'Right. Ordered keys make prefix scans efficient, and sharding handles size.'),
+        alt('scan', 'Scan all objects', 'wrong', 'Too slow.'),
+        alt('hash', 'Hash-partition by key only', 'ok', 'Even load, but prefix listing needs scatter-gather.'),
+      ], ['Use pagination with continuation tokens.'], 'Design a sharded metadata index supporting prefix listing with pagination tokens.'),
+    ],
+  },
+
+  leaderboard: {
+    design: [
+      step('ops', 'The four operations', 'Which commands does a leaderboard need from its store?', [
+        best('ops', 'Insert or increment a score, read the top N, read a user’s rank, read neighbours', 'Right. In a sorted set these are ZADD/ZINCRBY, ZREVRANGE, ZREVRANK, and a range around a rank.'),
+        alt('sort', 'Sort everything on every read', 'wrong', 'Too slow.'),
+        alt('only', 'Only insert', 'wrong', 'Players want to read rankings.'),
+      ], ['Each operation is O(log n).'], 'Write helper functions for increment, top N, rank and neighbours using Redis commands.'),
