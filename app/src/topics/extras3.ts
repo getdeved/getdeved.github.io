@@ -236,3 +236,32 @@ export const extras3: Extras = {
         alt('sort', 'Sort everything on every read', 'wrong', 'Too slow.'),
         alt('only', 'Only insert', 'wrong', 'Players want to read rankings.'),
       ], ['Each operation is O(log n).'], 'Write helper functions for increment, top N, rank and neighbours using Redis commands.'),
+      step('monthly', 'A fresh board each month', 'Rankings reset monthly. How do you model that?', [
+        best('keys', 'A new sorted set key per month, and keep old ones for history', 'Right. Switching keys is instant and old months remain queryable.'),
+        alt('del', 'Delete all scores monthly', 'ok', 'Loses history and is a big operation.'),
+        alt('one', 'One set with month in each score', 'wrong', 'Complicates ranking.'),
+      ], ['Name keys like leaderboard:2026-11.'], 'Create a month-scoped Redis key and a job that archives last month’s top 1000.'),
+    ],
+    client: [
+      step('cheat', 'Cheating', 'A player edits their app to claim a huge score. How do you stop it?', [
+        best('server', 'Only the game server awards points, after verifying the game result', 'Right. Clients are untrusted; scores come only from trusted servers.'),
+        alt('client', 'Let clients report their score', 'wrong', 'Trivial to forge.'),
+        alt('hide', 'Hide the API URL', 'wrong', 'Security by obscurity.'),
+      ], ['Rate-limit and audit unusual score jumps.'], 'Validate a match result server-side before calling ZINCRBY, with an audit log of every change.'),
+    ],
+    scale: [
+      step('managed', 'Run it yourself or use the cloud?', 'You could run Redis yourself, or use managed services such as serverless functions and a managed NoSQL database. Which?', [
+        best('depends', 'Managed services cut operations work; self-managed gives more control. Pick based on team and scale', 'Right. Both work. Managed options (for example DynamoDB with a global secondary index) trade control for less maintenance.'),
+        alt('never', 'Never use managed services', 'wrong', 'They are often the faster path.'),
+        alt('always', 'Always use managed services', 'wrong', 'Cost and control can matter at scale.'),
+      ], ['Cloud design: API gateway to Lambda to a managed store.'], 'Sketch the same leaderboard on serverless functions and a managed database, and list the trade-offs.'),
+    ],
+    fail: [
+      step('hash', 'Showing names, not IDs', 'The top ten should show names and avatars. Where do they come from?', [
+        best('hash', 'Cache user details in a Redis hash and look them up for the top N', 'Right. One extra cheap lookup per displayed player, with no database hit.', { add: [n('uc', 'User cache', 'cache', 2.2, 3.6, 'Stores profile details (name, avatar) by user ID.')], edges: ['ls>uc'], d: { speed: 10 } }),
+        alt('sql', 'Query the user table each time', 'ok', 'Works but adds load.'),
+        alt('inline', 'Store names inside the sorted set', 'wrong', 'Names change and bloat the set.'),
+      ], ['Break ties by who reached the score first.'], 'Cache user profile hashes and fetch them in a pipeline for the top 10 results.'),
+    ],
+  },
+}
