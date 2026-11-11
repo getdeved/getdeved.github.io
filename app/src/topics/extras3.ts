@@ -175,3 +175,32 @@ export const extras3: Extras = {
         alt('ignore', 'Nothing, nodes are identical', 'wrong', 'The node owning that key is overloaded.'),
         alt('drop', 'Drop some clicks', 'wrong', 'Clicks are revenue.'),
       ], ['Allocate more aggregation nodes for hot partitions.'], 'Split a hot ad key into 8 sub-keys, aggregate separately, then merge counts.'),
+      step('recover', 'Recovering a failed node', 'An aggregation node crashes with in-memory counts. How do you recover?', [
+        best('snap', 'Restore from a snapshot of state plus the offset, and replay events after it', 'Right. Snapshots limit how much to replay, and offsets say where to resume.'),
+        alt('zero', 'Restart from zero', 'wrong', 'Counts would be wrong.'),
+        alt('copy', 'Ask another node for its counts', 'ok', 'Possible, but needs replicated state.'),
+      ], ['Fault tolerance relies on checkpointing and replayable queues.'], 'Checkpoint window state and the last consumed offset every 30 seconds and restore on restart.'),
+    ],
+    trust: [
+      step('lambda', 'Batch and streaming together', 'Should the batch path and the streaming path be separate systems?', [
+        best('choice', 'Either run both in parallel (Lambda) or run one streaming path that can replay history (Kappa)', 'Right. Lambda duplicates logic but keeps a trusted batch; Kappa simplifies by replaying through the stream.'),
+        alt('stream', 'Streaming alone is always enough', 'ok', 'Possible with replay, but correctness checks matter.'),
+        alt('batch', 'Batch alone', 'ok', 'Too slow for near-real-time reporting.'),
+      ], ['Choose based on how much you trust the streaming pipeline.'], 'Compare Lambda and Kappa architectures for ad aggregation in cost, complexity and correctness.'),
+    ],
+  },
+
+  'object-storage': {
+    split: [
+      step('buckets', 'Buckets and keys', 'Users store data in buckets under names. What are these?', [
+        best('flat', 'A bucket is a container with a globally unique name; an object is stored under a key within it', 'Right. The namespace is flat; slashes in keys are just characters that tools display as folders.'),
+        alt('fs', 'A real folder hierarchy', 'wrong', 'There are no real directories.'),
+        alt('db', 'A database table per bucket', 'wrong', 'That is an implementation detail at best.'),
+      ], ['Objects are immutable: you replace, not edit.'], 'Design the metadata schema: bucket (name, owner), object (bucket, key, object_id, version, size).'),
+      step('upload', 'The upload path', 'A client uploads an object. What happens, in order?', [
+        best('flow', 'Check access, store the bytes in the data store, then record the metadata', 'Right. Writing metadata last means a record only exists for data that is safely stored.'),
+        alt('meta', 'Record metadata first, upload later', 'ok', 'A crash leaves records pointing at nothing.'),
+        alt('skip', 'Skip access checks for speed', 'wrong', 'Security is non-negotiable.'),
+      ], ['Download is the reverse: look up metadata, then read the bytes by object ID.'], 'Write the PUT object flow: authorize, write bytes with a checksum, then insert metadata.'),
+    ],
+    durable: [
