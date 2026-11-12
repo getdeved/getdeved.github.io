@@ -168,3 +168,32 @@ export const extras4: Extras = {
         alt('same', 'No difference', 'wrong', 'One fixes the price, the other fixes the timing.'),
         alt('rev', 'Market orders set a price', 'wrong', 'Reversed.'),
       ], ['Many other order types build on these two.'], 'Implement market and limit order handling in a matching engine, including partial fills.'),
+      step('feed', 'Telling the world prices', 'Traders want live prices and the book’s depth. How does the exchange share it?', [
+        best('pub', 'A market data publisher builds price levels from executions and streams them to subscribers', 'Right. It is separate from matching, so a slow subscriber never slows trading.', { add: [n('md', 'Market data publisher', 'radio', 5.2, 0.5, 'Turns executions into live price data (L1, L2, L3) and distributes it to subscribers.')], edges: ['me>>md:executions'], d: { speed: 5 } }),
+        alt('poll', 'Everyone polls the engine', 'wrong', 'Floods the most latency-sensitive component.'),
+        alt('email', 'Email prices', 'wrong', 'Far too slow.'),
+      ], ['Levels: L1 best bid and ask; L2 depth by price; L3 each order.'], 'Publish top-of-book and depth updates from an order book to subscribers over a stream.'),
+    ],
+    seq: [
+      step('bus', 'Fast messaging inside the engine', 'Components must pass events in microseconds. How?', [
+        best('mmap', 'A shared memory-mapped ring buffer on one machine, with no network or serialisation overhead', 'Right. Avoiding copies and locks gets latency down to microseconds.'),
+        alt('http', 'HTTP between components', 'wrong', 'Milliseconds, not microseconds.'),
+        alt('queue', 'A heavyweight message broker', 'ok', 'Fine for slower flows, too slow here.'),
+      ], ['Colocating components on one server removes network hops.'], 'Implement a single-producer ring buffer in shared memory for passing events between two threads.'),
+    ],
+    es: [
+      step('thread', 'One thread, one core', 'Locks slow things down. How does the matching engine avoid them?', [
+        best('single', 'A single-threaded main loop pinned to one CPU core, processing events in order', 'Right. No locks and no context switches, and the order is naturally deterministic.'),
+        alt('many', 'Many threads on the same book', 'wrong', 'Locking and non-determinism.'),
+        alt('async', 'Asynchronous callbacks everywhere', 'ok', 'Adds overhead and complexity.'),
+      ], ['Shard by symbol to use more cores: each symbol’s book has its own single-threaded engine.'], 'Run one matching engine thread per symbol shard with events delivered by a lock-free queue.'),
+    ],
+    ha: [
+      step('fair', 'Fair distribution of prices', 'Everyone should see a price at about the same moment. How is that approached?', [
+        best('multi', 'Multicast distribution over a reliable network so every subscriber receives each message at the same time', 'Right. One send reaches many receivers simultaneously, which is fairer than looping through connections.'),
+        alt('loop', 'Send to each subscriber in turn', 'wrong', 'Earlier subscribers get an advantage.'),
+        alt('slow', 'Delay everyone equally', 'ok', 'Fair but costly.'),
+      ], ['Colocation: brokers rent space near the exchange; equal-length cables keep latency fair.'], 'Describe multicast market data distribution and why equal cable lengths matter for fairness.'),
+    ],
+  },
+}
