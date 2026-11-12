@@ -81,3 +81,34 @@ export const extras4: Extras = {
 
   payments: {
     flow: [
+      step('hosted', 'The hosted payment page', 'Why does the customer type their card number on the PSP’s page, not yours?', [
+        best('hosted', 'So card data never touches your servers, reducing risk and compliance burden', 'Right. You receive a token or result, not the card number.'),
+        alt('pretty', 'Because it looks nicer', 'wrong', 'The reason is security and compliance.'),
+        alt('cheap', 'Because it is cheaper to host', 'wrong', 'Security is the main reason.'),
+      ], ['The PSP redirects back to you with a result and sends a webhook.'], 'Implement a checkout redirect to a hosted payment page and a return URL handler.'),
+      step('states', 'Payment states', 'A payment is created, pending, then succeeds or fails. How do you track it?', [
+        best('machine', 'Store the payment order with an explicit status and only allow valid transitions', 'Right. A state machine prevents impossible jumps, like refunding something never paid.'),
+        alt('flag', 'A single paid boolean', 'ok', 'Too little for pending, failed and refunded.'),
+        alt('none', 'Do not store state', 'wrong', 'You cannot recover from a crash.'),
+      ], ['Persist the state after every transition.'], 'Model payment states and transitions in code and reject invalid ones.'),
+    ],
+    idem: [
+      step('delay', 'The PSP is slow', 'The PSP does not answer immediately. What does the customer see?', [
+        best('pending', 'A pending status, updated when the PSP’s webhook or a poll reports the result', 'Right. Payments are asynchronous; show progress and reconcile later.'),
+        alt('wait', 'A spinner until it answers', 'ok', 'Ties up resources and may time out.'),
+        alt('fail', 'Mark it failed', 'wrong', 'It may have succeeded.'),
+      ], ['Webhooks plus periodic polling cover missed callbacks.'], 'Handle PSP webhooks idempotently and poll payments stuck in pending for over 5 minutes.'),
+    ],
+    ledger: [
+      step('recon', 'Does it all add up?', 'Every day the PSP sends a settlement file. What do you do with it?', [
+        best('recon', 'Compare it line by line with your records and investigate differences', 'Right. Reconciliation catches errors no other check does, and is the last line of defence.', { add: [n('rec', 'Reconciliation', 'shield', 6.1, 3.3, 'Compares your records with the PSP’s settlement file and flags mismatches.')], edges: ['rec>>lg:compare'], d: { availability: 5 } }),
+        alt('trust', 'Trust the PSP', 'wrong', 'Mistakes happen on both sides.'),
+        alt('skip', 'Skip it, we have logs', 'wrong', 'Logs do not prove balances.'),
+      ], ['Some mismatches can be fixed automatically; others need a person.'], 'Write a reconciliation job comparing daily PSP settlement rows with ledger entries and listing mismatches.'),
+    ],
+    fail: [
+      step('security', 'Protecting the system', 'A payment system is a prime target. What basics are essential?', [
+        best('sec', 'TLS everywhere, tokenised data, least-privilege access and audit logs', 'Right. Layered protection limits damage if one layer fails.'),
+        alt('one', 'A strong firewall is enough', 'wrong', 'No single control is enough.'),
+        alt('none', 'Hide the URLs', 'wrong', 'Not security.'),
+      ], ['Also protect against replay and verify webhook signatures.'], 'Verify PSP webhook signatures and reject replays using a timestamp window.'),
