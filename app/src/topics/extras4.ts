@@ -112,3 +112,32 @@ export const extras4: Extras = {
         alt('one', 'A strong firewall is enough', 'wrong', 'No single control is enough.'),
         alt('none', 'Hide the URLs', 'wrong', 'Not security.'),
       ], ['Also protect against replay and verify webhook signatures.'], 'Verify PSP webhook signatures and reject replays using a timestamp window.'),
+      step('comm', 'Services talking to each other', 'Payment, order and ledger services must stay consistent. How do they communicate?', [
+        best('async', 'Asynchronous messages with idempotent handlers, plus synchronous calls where an answer is needed', 'Right. Queues add resilience; idempotency makes retries safe.'),
+        alt('sync', 'Only synchronous calls', 'ok', 'Simple, but one slow service stalls the rest.'),
+        alt('shared', 'A shared database', 'wrong', 'Tight coupling and hard to evolve.'),
+      ], ['Use exactly-once semantics at the effect level, not the transport level.'], 'Publish payment-succeeded events and have order and ledger services consume them idempotently.'),
+    ],
+  },
+
+  wallet: {
+    shard: [
+      step('inmem', 'Balances in memory', 'A database round trip per transfer is too slow for a million per second. What do you do?', [
+        best('mem', 'Keep balances in memory on the node that owns them, backed by a durable log', 'Right. Memory is fast; the log makes it recoverable.'),
+        alt('db', 'Read and write the database each time', 'wrong', 'Too slow.'),
+        alt('cache', 'A best-effort cache', 'wrong', 'A lost balance is unacceptable.'),
+      ], ['In-memory key-value stores such as Redis offer speed but need durability design.'], 'Hold account balances in a per-node map and append every change to a write-ahead log.'),
+    ],
+    dist: [
+      step('saga', 'Saga for transfers', 'TC/C and sagas both cope with cross-node transfers. How does a saga differ?', [
+        best('saga', 'A saga runs local steps in order and undoes completed ones with compensations if a step fails', 'Right. It is simpler than TC/C but intermediate states are visible between steps.'),
+        alt('same', 'It is identical to TC/C', 'wrong', 'TC/C reserves first, then confirms or cancels everywhere.'),
+        alt('lock', 'It locks every account first', 'wrong', 'That is closer to two-phase commit.'),
+      ], ['Choreography: services react to events. Orchestration: a coordinator drives the steps.'], 'Compare choreography and orchestration sagas for a wallet transfer.'),
+      step('crash', 'The coordinator crashes', 'The coordinator dies after Try but before Confirm. What now?', [
+        best('log', 'On restart, read its durable log and finish or cancel each in-flight transfer', 'Right. Persisted state turns a crash into a pause.'),
+        alt('forget', 'Forget the transfer', 'wrong', 'Funds stay reserved forever.'),
+        alt('retry', 'Run the transfer again from the start', 'ok', 'Needs idempotency, or it may double move money.'),
+      ], ['Out-of-order Try and Cancel messages must be handled gracefully.'], 'Write recovery that replays a transaction log and completes or cancels each unfinished TC/C transfer.'),
+    ],
+    es: [
