@@ -141,3 +141,30 @@ export const extras4: Extras = {
       ], ['Out-of-order Try and Cancel messages must be handled gracefully.'], 'Write recovery that replays a transaction log and completes or cancels each unfinished TC/C transfer.'),
     ],
     es: [
+      step('cmd', 'Commands and events', 'In event sourcing, what is the difference between a command and an event?', [
+        best('def', 'A command is a request that may be rejected; an event is a fact that already happened', 'Right. Validation turns a command into zero or more events, which are never changed.'),
+        alt('same', 'They are the same', 'wrong', 'Commands can fail; events cannot be undone.'),
+        alt('rev', 'Events are requests', 'wrong', 'Reversed.'),
+      ], ['Example: Transfer is a command; TransferCompleted is an event.'], 'Validate a Transfer command against balances and emit TransferCompleted or TransferRejected events.'),
+      step('snap', 'Snapshots', 'Replaying years of events on restart is slow. What helps?', [
+        best('snap', 'Periodic snapshots of state, replaying only events after the latest one', 'Right. Recovery loads a snapshot then applies a short tail of events.', { add: [n('snap', 'Snapshots', 'archive', 4.6, 5, 'Periodic copies of state so recovery replays only recent events.')], edges: ['el>>snap'], d: { speed: 5 } }),
+        alt('all', 'Always replay everything', 'ok', 'Correct but slow.'),
+        alt('drop', 'Delete old events', 'wrong', 'Loses the audit trail.'),
+      ], ['Snapshots are an optimisation; the log remains the truth.'], 'Take a snapshot every 100,000 events and make recovery load the latest snapshot then replay the rest.'),
+    ],
+    ha: [
+      step('verify', 'Can we prove the balances?', 'Auditors want proof that balances are correct. What gives it to you?', [
+        best('replay', 'Replay the event log independently and compare with the live state', 'Right. Deterministic replay is a built-in audit tool.'),
+        alt('trust', 'Trust the live state', 'wrong', 'Bugs would go unnoticed.'),
+        alt('spot', 'Spot-check a few accounts', 'ok', 'Catches some errors only.'),
+      ], ['Reproducibility is the main benefit of event sourcing.'], 'Write a verifier that replays the log into a fresh state and diffs it against production balances.'),
+    ],
+  },
+
+  exchange: {
+    book: [
+      step('orders', 'Limit and market orders', 'What is the difference between a limit order and a market order?', [
+        best('def', 'A limit order sets a price; a market order takes the best available price now', 'Right. Limit orders can rest in the book; market orders execute immediately against it.'),
+        alt('same', 'No difference', 'wrong', 'One fixes the price, the other fixes the timing.'),
+        alt('rev', 'Market orders set a price', 'wrong', 'Reversed.'),
+      ], ['Many other order types build on these two.'], 'Implement market and limit order handling in a matching engine, including partial fills.'),
