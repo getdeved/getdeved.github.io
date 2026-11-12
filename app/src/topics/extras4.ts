@@ -57,3 +57,27 @@ export const extras4: Extras = {
       ], ['Retry with backoff for temporary failures; bounce for permanent ones.'], 'Queue outgoing emails and write a worker that retries temporary SMTP failures with exponential backoff.'),
     ],
     meta: [
+      step('inbound', 'Receiving mail', 'Mail arrives from other providers. What handles it?', [
+        best('inbound', 'Inbound SMTP servers that check for spam and viruses, then store the message', 'Right. Filtering before storage keeps your inboxes clean.', { add: [n('inb', 'Inbound SMTP', 'mail', 5.4, 2, 'Accepts mail from other providers and filters spam and viruses before storing.')], edges: ['inb>md'], d: { availability: 5 } }),
+        alt('web', 'The web servers accept it', 'wrong', 'They are not mail servers and not safe to expose that way.'),
+        alt('none', 'Accept everything unfiltered', 'wrong', 'Spam floods every inbox.'),
+      ], ['Reject mail that fails authentication checks where policy allows.'], 'Add an inbound SMTP stage that runs spam and virus scanning before writing to the mailbox store.'),
+    ],
+    deliver: [
+      step('bounce', 'Bounces and complaints', 'Some mail bounces; some recipients mark it as spam. Why does that matter?', [
+        best('rep', 'They damage your sending reputation, so feed them back and stop sending to bad addresses', 'Right. Providers watch bounce and complaint rates. Handle them quickly to stay trusted.'),
+        alt('ignore', 'It does not matter', 'wrong', 'High rates push all your mail to spam.'),
+        alt('retry', 'Keep retrying forever', 'wrong', 'That worsens the problem.'),
+      ], ['Set up feedback loops with major ISPs.'], 'Process bounce notifications by suppressing hard-bounced addresses and tracking complaint rate per sender.'),
+    ],
+    search: [
+      step('cache', 'Recent mail fast', 'Users mostly read recent mail. How do you speed that up?', [
+        best('cache', 'Cache recent messages and folder listings', 'Right. The hot slice of each mailbox fits in memory.', { add: [n('cc', 'Mail cache', 'cache', 5.4, 3.6, 'Holds each user’s recent emails for instant opening.')], edges: ['ws>>cc'], d: { speed: 10 } }),
+        alt('db', 'Always read from the database', 'ok', 'Correct but slower under load.'),
+        alt('all', 'Cache all mail', 'wrong', 'Memory cannot hold petabytes.'),
+      ], ['Replicate across data centers for availability.'], 'Add an LRU cache for each user’s latest 100 emails with invalidation on new mail.'),
+    ],
+  },
+
+  payments: {
+    flow: [
