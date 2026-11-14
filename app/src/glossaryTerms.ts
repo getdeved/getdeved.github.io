@@ -1,0 +1,30 @@
+// Terms for the glossary page. `full` marks an acronym's expansion; `topics` are catalog ids where it comes up.
+export type Term = { term: string; full?: string; def: string; topics?: string[] }
+
+export const terms: Term[] = [
+  // --- acronyms ---
+  { term: 'ACID', full: 'Atomicity, Consistency, Isolation, Durability', def: 'The four guarantees of a classic database transaction: it happens fully or not at all, keeps data valid, does not interfere with others running at the same time, and survives a crash.', topics: ['hotel', 'wallet', 'payments'] },
+  { term: 'API', full: 'Application Programming Interface', def: 'The agreed way one program asks another to do something, such as GET /users/12.', topics: ['scaling', 'news-feed'] },
+  { term: 'APNs', full: 'Apple Push Notification service', def: 'Apple’s service for delivering push notifications to iPhones and iPads.', topics: ['notifications'] },
+  { term: 'AZ', full: 'Availability Zone', def: 'An isolated data center (or group) within a cloud region. Spreading across AZs survives the loss of one building.', topics: ['scaling', 'object-storage'] },
+  { term: 'CAP', full: 'Consistency, Availability, Partition tolerance', def: 'A theorem: when the network splits, a distributed store must choose between answering with possibly stale data (available) and refusing until it is sure (consistent).', topics: ['key-value'] },
+  { term: 'CDN', full: 'Content Delivery Network', def: 'Servers around the world that cache static files close to users so pages load faster.', topics: ['scaling', 'youtube', 'maps'] },
+  { term: 'CI/CD', full: 'Continuous Integration / Continuous Delivery', def: 'Automation that builds, tests and deploys every change, so releases are routine rather than events.', topics: ['scaling'] },
+  { term: 'CRC', full: 'Cyclic Redundancy Check', def: 'A cheap checksum stored with data to detect corruption.', topics: ['message-queue', 'object-storage'] },
+  { term: 'DAG', full: 'Directed Acyclic Graph', def: 'A set of tasks with one-way dependencies and no loops. Used to schedule pipelines such as video transcoding.', topics: ['youtube'] },
+  { term: 'DAU', full: 'Daily Active Users', def: 'How many distinct people use a product on a given day. A starting point for traffic estimates.', topics: ['estimation'] },
+  { term: 'DKIM', full: 'DomainKeys Identified Mail', def: 'A signature on outgoing email that lets receivers verify it really came from your domain and was not altered.', topics: ['email'] },
+  { term: 'DMARC', full: 'Domain-based Message Authentication, Reporting and Conformance', def: 'A policy telling receivers what to do with email that fails SPF or DKIM checks, plus reports back to you.', topics: ['email'] },
+  { term: 'DNS', full: 'Domain Name System', def: 'The internet’s phone book: turns a name like api.mysite.com into an IP address.', topics: ['scaling'] },
+  { term: 'DoS', full: 'Denial of Service', def: 'Overwhelming a service with traffic so real users cannot use it. Rate limiting is one defence.', topics: ['rate-limiter'] },
+  { term: 'DRM', full: 'Digital Rights Management', def: 'Technology that restricts copying or playing of protected content.', topics: ['youtube'] },
+  { term: 'ETA', full: 'Estimated Time of Arrival', def: 'The predicted arrival time on a route, kept fresh as traffic changes.', topics: ['maps'] },
+  { term: 'FCM', full: 'Firebase Cloud Messaging', def: 'Google’s service for delivering push notifications to Android devices.', topics: ['notifications'] },
+  { term: 'FIFO', full: 'First In, First Out', def: 'Items leave in the order they arrived, like a queue at a shop.', topics: ['rate-limiter', 'web-crawler'] },
+  { term: 'GDPR / CCPA', full: 'General Data Protection Regulation / California Consumer Privacy Act', def: 'Privacy laws that govern how personal data, including location, is collected and stored.', topics: ['proximity'] },
+  { term: 'GOP', full: 'Group of Pictures', def: 'A short run of video frames that can be decoded independently. Videos are split along GOP boundaries so pieces can be processed in parallel.', topics: ['youtube'] },
+  { term: 'HA', full: 'High Availability', def: 'Designing a system to stay up despite failures, usually through redundancy.', topics: ['scaling', 'estimation'] },
+  { term: 'HDD / SSD', full: 'Hard Disk Drive / Solid-State Drive', def: 'Two kinds of disk. An HDD seek takes about 10 ms; an SSD random read about 150 microseconds. Memory is faster than both.', topics: ['estimation'] },
+  { term: 'HLS / DASH', full: 'HTTP Live Streaming / Dynamic Adaptive Streaming over HTTP', def: 'Streaming protocols that cut video into small segments at several quality levels so players can switch as the network changes.', topics: ['youtube'] },
+  { term: 'HTTP / HTTPS', full: 'Hypertext Transfer Protocol (Secure)', def: 'The request-response protocol of the web. HTTPS adds encryption.', topics: ['scaling', 'url-shortener'] },
+  { term: 'IAM', full: 'Identity and Access Management', def: 'The central place that decides who you are and what you may do.', topics: ['object-storage'] },
