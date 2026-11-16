@@ -22,7 +22,7 @@ export default function Playground({ topicId }: { topicId: string }) {
   }
 
   const body =
-    topicId in guidedTopics ? (mode === 'guided' || mode === 'quiz' ? <Guided key={`${gen}-${mode}`} topic={guidedTopics[topicId]} quiz={mode === 'quiz'} onInspect={setInfo} /> : <Builder key={topicId} spec={topicId === 'scaling' ? scalingSpec : autoSpec(guidedTopics[topicId])} onInspect={setInfo} onLearn={learn} />)
+    Object.hasOwn(guidedTopics, topicId) ? (mode === 'guided' || mode === 'quiz' ? <Guided key={`${gen}-${mode}`} topic={guidedTopics[topicId]} quiz={mode === 'quiz'} onInspect={setInfo} /> : <Builder key={topicId} spec={topicId === 'scaling' ? scalingSpec : autoSpec(guidedTopics[topicId])} onInspect={setInfo} onLearn={learn} />)
     : mode === 'learn' ? <EstimationLearn /> : <Estimate />
 
   return (
@@ -37,7 +37,7 @@ export default function Playground({ topicId }: { topicId: string }) {
               <div key={t.name}>
                 <h3>{t.name}</h3>
                 <ul>
-                  {t.topics.map((x) => x.id in lessons
+                  {t.topics.map((x) => Object.hasOwn(lessons, x.id)
                     ? <li key={x.id}>{x.id === topicId ? <b>{x.title}</b> : <a href={`#/playground/${x.id}`}>{x.title}</a>}</li>
                     : <li key={x.id} className="soon">{x.title}<span>soon</span></li>)}
                 </ul>

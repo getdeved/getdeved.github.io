@@ -24,6 +24,6 @@ export default function App() {
   }, [])
   if (hash.startsWith('#/glossary')) return <Glossary />
   const id = hash.startsWith('#/playground/') ? hash.split('/')[2] : ''
-  if (id in lessons) return <Playground key={id} topicId={id} />
+  if (Object.hasOwn(lessons, id)) return <Playground key={id} topicId={id} />
   return hash.startsWith('#/playground') ? <Overview /> : <Landing />
 }
