@@ -21,14 +21,44 @@ export function Defs() {
   )
 }
 
+// Labels must stay inside the box: measure with the real font, then shrink and wrap onto two lines if needed.
+const MAX_TEXT = 92
+let ctx: CanvasRenderingContext2D | null | undefined
+const measure = (s: string, px: number) => {
+  ctx ??= typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
+  if (!ctx) return s.length * px * 0.58
+  ctx.font = `600 ${px}px Geist, system-ui, sans-serif`
+  return ctx.measureText(s).width
+}
+export function fitLabel(label: string): { lines: string[]; size: number } {
+  if (measure(label, 13) <= MAX_TEXT) return { lines: [label], size: 13 }
+  if (measure(label, 11.5) <= MAX_TEXT) return { lines: [label], size: 11.5 }
+  const words = label.split(' ')
+  let best: string[] | null = null, bestW = Infinity
+  for (let i = 1; i < words.length; i++) {
+    const pair = [words.slice(0, i).join(' '), words.slice(i).join(' ')]
+    const w = Math.max(...pair.map((s) => measure(s, 11.5)))
+    if (w < bestW) { best = pair; bestW = w }
+  }
+  if (best && bestW <= MAX_TEXT) return { lines: best, size: 11.5 }
+  // last resort (a very long word): shrink further and cut with an ellipsis
+  const size = 10
+  const cut = (s: string) => { while (s.length > 3 && measure(`${s}…`, size) > MAX_TEXT) s = s.slice(0, -1); return `${s}…` }
+  return { lines: (best ?? [label]).map((s) => (measure(s, size) <= MAX_TEXT ? s : cut(s))), size }
+}
+
 export function NodeBox({ n, className = '', children, ...rest }: { n: NodeDef; className?: string; children?: ReactNode } & Omit<SVGProps<SVGGElement>, 'className'>) {
   const Icon = icons[n.icon]
+  const { lines, size } = fitLabel(n.label)
+  const two = lines.length === 2
   return (
     <g transform={`translate(${n.x - W / 2} ${n.y - H / 2})`} className={`node ${className}`} {...rest}>
       <rect width={W} height={H} rx={10} />
-      <Icon x={W / 2 - 11} y={8} width={22} height={22} />
-      <text x={W / 2} y={46} textAnchor="middle" className="label">{n.label}</text>
-      {n.sub && <text x={W / 2} y={60} textAnchor="middle" className="sub">{n.sub}</text>}
+      <Icon x={W / 2 - 11} y={7} width={22} height={22} />
+      {lines.map((l, i) => (
+        <text key={i} x={W / 2} y={two ? 41 + i * 12 : 46} textAnchor="middle" className="label" style={{ fontSize: size }}>{l}</text>
+      ))}
+      {n.sub && <text x={W / 2} y={two ? 65 : 60} textAnchor="middle" className="sub" style={two ? { fontSize: 9 } : undefined}>{n.sub}</text>}
       {children}
     </g>
   )
