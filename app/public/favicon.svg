@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="7" fill="#0a0c0f"/>
-  <!-- a lowercase "d": a node (ring) joined to a link (stem) -->
-  <circle cx="13" cy="19" r="5.5" fill="none" stroke="#6ee7a0" stroke-width="3"/>
-  <line x1="21" y1="6" x2="21" y2="25" stroke="#6ee7a0" stroke-width="3" stroke-linecap="round"/>
+  <!-- an uppercase "D": a straight link closed by a round node -->
+  <path d="M9.5 8 H14.5 A8 8 0 0 1 14.5 24 H9.5 Z" fill="none" stroke="#6ee7a0" stroke-width="3" stroke-linejoin="round"/>
 </svg>
