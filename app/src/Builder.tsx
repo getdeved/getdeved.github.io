@@ -15,6 +15,7 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
   const finalTests = tests.filter((t) => t.groupEnd ?? true) // generated specs end each group with one summary check
   const [nodes, setNodes] = useState(start.nodes)
   const [edges, setEdges] = useState(start.edges)
+  const [sel, setSel] = useState<string | null>(null) // box whose details were last opened
   const [conn, setConn] = useState<{ from: string; x: number; y: number } | null>(null)
   const [idx, setIdx] = useState(0) // current challenge; idx === tests.length means the final run
   const [result, setResult] = useState<Result | null>(null)
@@ -92,6 +93,7 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
       drag.current = null
       if (!d.moved) {
         const n = nodes.find((x) => x.id === d.id)!
+        setSel(n.id)
         onInspect({ kind: n.kind!, name: n.label, tip: n.tip, onRemove: n.id === 'users' ? undefined : () => remove(n.id) })
       }
     } else if (conn) {
@@ -204,7 +206,7 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
             </div>
             <svg ref={svg} viewBox={`${view.x} ${view.y} ${1000 / view.z} ${600 / view.z}`} className="diagram canvas" role="application" aria-label="Design canvas"
               onPointerMove={onMove} onPointerUp={onUp}
-              onPointerDown={(e) => { if (e.target === e.currentTarget) { svg.current!.setPointerCapture(e.pointerId); pan.current = { sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y } } }}
+              onPointerDown={(e) => { if (e.target === e.currentTarget) { setSel(null); svg.current!.setPointerCapture(e.pointerId); pan.current = { sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y } } }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); const k = e.dataTransfer.getData('text/plain'); if (palette.some((p) => p.kind === k)) add(k, point(e)) }}>
               <Defs />
@@ -223,7 +225,7 @@ export default function Builder({ spec, onInspect, onLearn }: { spec: BuildSpec;
               })}
               {conn && <line className="ghost" x1={byId.get(conn.from)!.x} y1={byId.get(conn.from)!.y} x2={conn.x} y2={conn.y} />}
               {nodes.map((n) => (
-                <NodeBox key={n.id} n={n} className="clickable draggable"
+                <NodeBox key={n.id} n={n} className={`clickable draggable ${sel === n.id ? 'selected' : ''}`}
                   onPointerDown={(e) => { e.preventDefault(); const p = point(e); svg.current!.setPointerCapture(e.pointerId); drag.current = { id: n.id, ox: p.x - n.x, oy: p.y - n.y, sx: p.x, sy: p.y, moved: false } }}>
                   <circle className="port" cx={W} cy={H / 2} r={7}
                     onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); svg.current!.setPointerCapture(e.pointerId); setConn({ from: n.id, x: n.x, y: n.y }) }}>

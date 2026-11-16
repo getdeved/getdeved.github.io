@@ -65,8 +65,10 @@ blockquote { margin: 0 0 16px; padding: 10px 12px; background: var(--bg); border
 
 /* clickable nodes + info dialog */
 .node.clickable { cursor: pointer }
-.node.clickable:hover rect, .node.clickable:focus-visible rect { stroke: var(--accent) }
-.node.clickable:focus-visible { outline: none }
+.node.clickable:hover rect { stroke: var(--accent) }
+.node.clickable:focus, .node.clickable:focus-visible { outline: none }
+/* selected (details opened, or keyboard-focused): a darker green, heavier border and a faint tint */
+.node.selected rect, .node.clickable:focus-visible rect { stroke: var(--accent-deep); stroke-width: 3.5; fill: color-mix(in srgb, var(--accent) 14%, var(--raised)) }
 dialog.info { width: min(480px, calc(100vw - 32px)); padding: 24px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 30px 80px -20px rgb(0 0 0 / .7) }
 dialog.info::backdrop { background: rgb(0 0 0 / .55) }
 dialog.info h2 { margin: 0 0 4px; font-size: 1.3rem; letter-spacing: -.02em }

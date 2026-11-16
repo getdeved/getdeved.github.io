@@ -1,4 +1,4 @@
-import type { ReactNode, SVGProps } from 'react'
+import { useEffect, useState, type ReactNode, type SVGProps } from 'react'
 import { icons } from './icons'
 import type { Design } from './engine'
 import type { NodeDef } from './types'
@@ -22,7 +22,7 @@ export function Defs() {
 }
 
 // Labels must stay inside the box: measure with the real font, then shrink and wrap onto two lines if needed.
-const MAX_TEXT = 92
+const MAX_TEXT = 90
 let ctx: CanvasRenderingContext2D | null | undefined
 const measure = (s: string, px: number) => {
   ctx ??= typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
@@ -49,6 +49,9 @@ export function fitLabel(label: string): { lines: string[]; size: number } {
 
 export function NodeBox({ n, className = '', children, ...rest }: { n: NodeDef; className?: string; children?: ReactNode } & Omit<SVGProps<SVGGElement>, 'className'>) {
   const Icon = icons[n.icon]
+  // Labels are measured with the real font, so re-measure once the web font has loaded.
+  const [, remeasure] = useState(0)
+  useEffect(() => { void document.fonts?.ready.then(() => remeasure(1)) }, [])
   const { lines, size } = fitLabel(n.label)
   const two = lines.length === 2
   return (
@@ -70,8 +73,9 @@ export type Frame = { x: number; y: number; w: number; h: number; label: string 
 
 export function Diagram({ design, onNodeClick, frames = [] }: { design: Design; onNodeClick?: (n: NodeDef) => void; frames?: Frame[] }) {
   const byId = new Map(design.nodes.map((n) => [n.id, n]))
+  const [sel, setSel] = useState<string | null>(null) // the box whose details were last opened
   return (
-    <svg viewBox="0 0 1000 600" className="diagram" role="img" aria-label="System architecture diagram">
+    <svg viewBox="0 0 1000 600" className="diagram" role="img" aria-label="System architecture diagram" onClick={(e) => e.target === e.currentTarget && setSel(null)}>
       <Defs />
       {!design.nodes.length && <text x={500} y={300} textAnchor="middle" className="empty">Your architecture appears here</text>}
       {frames.map((f) => (
@@ -94,11 +98,11 @@ export function Diagram({ design, onNodeClick, frames = [] }: { design: Design; 
       })}
       {design.nodes.map((n) => (
         <NodeBox
-          key={n.id} n={n} className={`${design.added.includes(n.id) ? 'fresh' : ''} ${onNodeClick ? 'clickable' : ''}`}
+          key={n.id} n={n} className={`${design.added.includes(n.id) ? 'fresh' : ''} ${onNodeClick ? 'clickable' : ''} ${sel === n.id ? 'selected' : ''}`}
           {...(onNodeClick && {
             role: 'button', tabIndex: 0, 'aria-label': `About ${n.label}`,
-            onClick: () => onNodeClick(n),
-            onKeyDown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onNodeClick(n)),
+            onClick: () => { setSel(n.id); onNodeClick(n) },
+            onKeyDown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setSel(n.id), onNodeClick(n)),
           })}
         />
       ))}
